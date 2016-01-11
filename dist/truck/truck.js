@@ -482,13 +482,10 @@
   // Define Utilities methods:
   //==========================
   if (typeof jQuery !== 'undefined') return;
-  var slice = function(elements) {
-    return [].slice.apply(elements);
-  };
   $.extend({
     lib: "TruckJS",
 
-    version: '1.0.0-beta.3',
+    version: '0.0.1',
 
     noop: function() {},
 
@@ -552,16 +549,44 @@
       return ret;
     },
 
-    require: function(src, callback) {
-      callback = callback || $.noop;
-      var script = document.createElement('script');
-      script.setAttribute('type', 'text/javascript');
-      script.setAttribute('src', src);
-      script.setAttribute('defer', 'defer');
-      script.onload = function() {
-        callback.apply(callback, arguments);
+    require: function(src, callback, ctx) {
+      var onerror = "onerror";
+      var insertScript = function(script) {
+        var firstScript = document.getElementsByTagName("script")[0];
+        firstScript.parentNode.insertBefore(script, firstScript);
       };
-      document.getElementsByTagName('head')[0].appendChild(script);
+      var script = document.createElement("script");
+      var done = false;
+      var err;
+      var loadScript;
+      var handleError = function() {
+        err = new Error(src || "EMPTY");
+        loadScript();
+      };
+      var setupLoad = function(fn) {
+        return function() {
+          // Only call once.
+          if (done) {
+            return;
+          }
+          done = true;
+          fn();
+          if (callback) {
+            callback.call(ctx, err);
+          }
+        };
+      };
+
+      loadScript = setupLoad(function() {
+        script.onload = script[onerror] = null;
+      });
+
+      script[onerror] = handleError;
+      script.onload = loadScript;
+      script.async = true;
+      script.charset = "utf-8";
+      script.src = src;
+      insertScript(script);
     },
 
     delay: function(func, milliseconds) {
@@ -7313,35 +7338,7 @@
 /* Inspired by Chuck Holloway's Move.JS */
 (function(self) {
   $(function() {
-    function require(name) {
-      var module = require.modules[name];
-      if (!module) throw new Error('failed to require "' + name + '"');
-
-      if (!('exports' in module) && typeof module.definition === 'function') {
-        module.client = module.component = true;
-        module.definition.call(this, module.exports = {}, module);
-        delete module.definition;
-      }
-
-      return module.exports;
-    }
-
-    require.modules = {};
-
-    require.register = function(name, definition) {
-      require.modules[name] = {
-        definition: definition
-      };
-    };
-
-    require.define = function(name, exports) {
-      require.modules[name] = {
-        exports: exports
-      };
-    };
-
-    require.register("transformProperty", function(exports, module) {
-
+    function transformProperty() {
       var styles = [
         'webkitTransform',
         'MozTransform',
@@ -7351,19 +7348,19 @@
 
       var el = document.createElement('p');
       var style;
-
+      var ret;
       for (var i = 0; i < styles.length; i++) {
         style = styles[i];
         if (null !== el.style[style]) {
-          module.exports = style;
+          ret = style;
           break;
         }
       }
-    });
+      return ret;
+    }
 
-    require.register("hasTranslate3d", function(exports, module) {
-
-      var prop = require('transformProperty');
+    function hasTranslate3d() {
+      var prop = transformProperty();
       var map = {
         webkitTransform: '-webkit-transform',
         msTransform: '-ms-transform',
@@ -7376,58 +7373,41 @@
       document.body.insertBefore(el, null);
       var val = getComputedStyle(el).getPropertyValue(map[prop]);
       document.body.removeChild(el);
-      module.exports = null !== val && val.length && 'none' != val;
-    });
+      return null !== val && val.length && 'none' != val;
+    }
 
-    require.register("hasTransitions", function(exports, module) {
-
-      exports = module.exports = function(el) {
-        switch (arguments.length) {
-          case 0:
-            return bool;
-          case 1:
-            return bool ? transitions(el) : bool;
-        }
-      };
-
-      function transitions(el, styl) {
-        if (el.transition) return true;
-        styl = window.getComputedStyle(el);
-        return !!parseFloat(styl.transitionDuration, 10);
-      }
-
+    function hasTransitions() {
       var styl = document.body.style;
-      var bool = 'transition' in styl || 'webkitTransition' in styl || 'MozTransition' in styl || 'msTransition' in styl;
+      return 'transition' in styl || 'webkitTransition' in styl || 'MozTransition' in styl || 'msTransition' in styl;
+    }
 
-    });
-
-    require.register("componentEvents", function(exports, module) {
+    function componentEvents() {
       var bind = 'addEventListener';
       var unbind = 'removeEventListener';
       var prefix = bind !== 'addEventListener' ? 'on' : '';
 
-      exports.bind = function(el, type, fn, capture) {
-        el[bind](prefix + type, fn, capture || false);
-        return fn;
-      };
+      return {
+        bind: function(el, type, fn, capture) {
+          el[bind](prefix + type, fn, capture || false);
+          return fn;
+        },
 
-      exports.unbind = function(el, type, fn, capture) {
-        el[unbind](prefix + type, fn, capture || false);
-        return fn;
-      };
-    });
+        unbind: function(el, type, fn, capture) {
+          el[unbind](prefix + type, fn, capture || false);
+          return fn;
+        }
+      }
+    }
 
-    require.register("cssEmitter", function(exports, module) {
+    function cssEmitter() {
 
-      var events = require('componentEvents');
+      var events = componentEvents();
 
       // CSS events:
 
       var watch = [
         'transitionend', 'webkitTransitionEnd', 'MSTransitionEnd', 'animationend', 'webkitAnimationEnd', 'MSAnimationEnd'
       ];
-
-      module.exports = CssEmitter;
 
       function CssEmitter(element) {
         if (!(this instanceof CssEmitter)) return new CssEmitter(element);
@@ -7458,14 +7438,19 @@
         self.bind(on);
         return this;
       };
-    });
 
-    require.register("once", function(exports, module) {
+      return CssEmitter;
+    }
+
+    function yieldsAafterTransition() {
+      var has = hasTransitions;
+      var emitter = cssEmitter();
+      var supported = has();
       var n = 0;
       var global = (function() {
         return this;
       })();
-      module.exports = function(fn) {
+      var once = function(fn) {
         var id = n++;
 
         function once() {
@@ -7484,16 +7469,7 @@
         }
 
         return once;
-      };
-
-    });
-
-    require.register("yieldsAafterTransition", function(exports, module) {
-      var has = require('hasTransitions'),
-        emitter = require('cssEmitter'),
-        once = require('once');
-      var supported = has();
-      module.exports = after;
+      }
 
       function after(el, fn) {
         if (!supported || !has(el)) return fn();
@@ -7507,12 +7483,10 @@
           callback();
         });
       };
+      return after
+    }
 
-    });
-
-    require.register("emitter", function(exports, module) {
-      module.exports = Emitter;
-
+    function emitter() {
       function Emitter(obj) {
         if (obj) return mixin(obj);
       }
@@ -7600,11 +7574,11 @@
       Emitter.prototype.hasListeners = function(event) {
         return !!this.listeners(event).length;
       };
+      return Emitter;
+    }
 
-    });
-
-    require.register("cssEase", function(exports, module) {
-      module.exports = {
+    function cssEase() {
+      return {
         'in': 'ease-in',
         'out': 'ease-out',
         'in-out': 'ease-in-out',
@@ -7644,296 +7618,293 @@
         'ease-in-back': 'cubic-bezier(0.600, -0.280, 0.735, 0.045)',
         'ease-out-back': 'cubic-bezier(0.175, 0.885, 0.320, 1.275)',
         'ease-in-out-back': 'cubic-bezier(0.680, -0.550, 0.265, 1.550)'
-
       };
+    }
 
-    });
+    function anim() {}
 
-    require.register("anim", function(exports, module) {
+    $.extend({
+      anim: (function() {
 
-      var Emitter = require('emitter');
+        var Emitter = emitter();
 
-      var query = function(selector) {
-        return document.querySelector(selector);
-      };
-
-      var after = require('yieldsAafterTransition');
-      var has3d = require('hasTranslate3d');
-      var ease = require('cssEase');
-      var translate = has3d ? ['translate3d(', ', 0)'] : ['translate(', ')'];
-      module.exports = Anim;
-      var style = window.getComputedStyle || window.currentStyle;
-
-      Anim.ease = ease;
-
-      Anim.defaults = {
-        duration: 500
-      };
-
-      // Default element selection used by anim(selector):
-      Anim.select = function(selector) {
-        return $(selector)[0];
-      };
-
-      // Initialize a new Anim with the given element:
-      function Anim(el) {
-        if (!(this instanceof Anim)) return new Anim(el);
-        if ('string' == typeof el) el = query(el);
-        if (!el) throw new TypeError('Anim must be initialized with element or selector');
-        this.el = el;
-        this._props = {};
-        this._rotate = 0;
-        this._transitionProps = [];
-        this._transforms = [];
-        this.duration(Anim.defaults.duration);
-        requestAnimationFrame(Anim)
-      }
-
-      // Inherit from EventEmitter.prototype:
-      Emitter(Anim.prototype);
-
-      // Buffer transform:
-      Anim.prototype.transform = function(transform) {
-        this._transforms.push(transform);
-        return this;
-      };
-
-      // Skew x and y:
-      Anim.prototype.skew = function(x, y) {
-        return this.transform('skew(' + x + 'deg, ' + (y || 0) + 'deg)');
-      };
-
-      // Skew x by n:
-      Anim.prototype.skewX = function(n) {
-        return this.transform('skewX(' + n + 'deg)');
-      };
-
-      // Skew y by n:
-      Anim.prototype.skewY = function(n) {
-        return this.transform('skewY(' + n + 'deg)');
-      };
-
-      // Translate x and y axis:
-      Anim.prototype.translate =
-        Anim.prototype.to = function(x, y) {
-          return this.transform(translate.join('' + x + 'px, ' + (y || 0) + 'px'));
+        var query = function(selector) {
+          return document.querySelector(selector);
         };
 
-      // Translate on x axis:
-      Anim.prototype.translateX =
-        Anim.prototype.x = function(n) {
-          return this.transform('translateX(' + n + 'px)');
-        };
+        var after = yieldsAafterTransition();
+        var has3d = hasTranslate3d();
+        var ease = cssEase();
+        var translate = has3d ? ['translate3d(', ', 0)'] : ['translate(', ')'];
+        // module.exports = Anim;
+        var style = window.getComputedStyle || window.currentStyle;
 
-      // Translate on y axis:
-      Anim.prototype.translateY =
-        Anim.prototype.y = function(n) {
-          return this.transform('translateY(' + n + 'px)');
-        };
-
-      // Scale x and y axis by x, or
-      // individually scale x and y:
-      Anim.prototype.scale = function(x, y) {
-        return this.transform('scale(' + x + ', ' + (y || x) + ')');
-      };
-
-      // Scale x axis by n
-      Anim.prototype.scaleX = function(n) {
-        return this.transform('scaleX(' + n + ')');
-      };
-
-      // Scale y axis by n
-      Anim.prototype.scaleY = function(n) {
-        return this.transform('scaleY(' + n + ')');
-      };
-
-      // Define matrix transform:
-      Anim.prototype.matrix = function(m11, m12, m21, m22, m31, m32) {
-        return this.transform('matrix(' + [m11, m12, m21, m22, m31, m32].join(',') + ')');
-      };
-
-      // Rotate n degrees:
-      Anim.prototype.rotate = function(n) {
-        return this.transform('rotate(' + n + 'deg)');
-      };
-
-      // Set transition easing function to fn string.
-      // Following shortcuts available:
-      // no argument - "ease" is used
-      // "in" - "ease-in" is used
-      // "out" - "ease-out" is used
-      // "in-out" - "ease-in-out" is used
-      Anim.prototype.ease = function(fn) {
-        fn = ease[fn] || fn || 'ease';
-        return this.setVendorProperty('transition-timing-function', fn);
-      };
-
-      // Set animation properties:
-      Anim.prototype.animate = function(name, props) {
-        for (var i in props) {
-          if (props.hasOwnProperty(i)) {
-            this.setVendorProperty('animation-' + i, props[i]);
-          }
+        // Initialize a new Anim with the given element:
+        function Anim(el) {
+          if (!(this instanceof Anim)) return new Anim(el);
+          if ('string' == typeof el) el = query(el);
+          if (!el) throw new TypeError('Anim must be initialized with element or selector');
+          this.el = el;
+          this._props = {};
+          this._rotate = 0;
+          this._transitionProps = [];
+          this._transforms = [];
+          this.duration(Anim.defaults.duration);
+          requestAnimationFrame(Anim)
         }
-        return this.setVendorProperty('animation-name', name);
-      };
+        Anim.ease = ease;
 
-      // Set duration to n milliseconds:
-      Anim.prototype.duration = function(n) {
-        n = this._duration = 'string' == typeof n ? parseFloat(n) * 1000 : n;
-        return this.setVendorProperty('transition-duration', n + 'ms');
-      };
+        Anim.defaults = {
+          duration: 500
+        };
 
-      // Delay the animation by n milliseconds:
-      Anim.prototype.delay = function(n) {
-        n = 'string' == typeof n ? parseFloat(n) * 1000 : n;
-        return this.setVendorProperty('transition-delay', n + 'ms');
-      };
+        // Default element selection used by anim(selector):
+        Anim.select = function(selector) {
+          return $(selector)[0];
+        };
 
-      // Set prop to val, deferred until .end() is invoked:
-      Anim.prototype.setProperty = function(prop, val) {
-        this._props[prop] = val;
-        return this;
-      };
+        // Inherit from EventEmitter.prototype:
+        Emitter(Anim.prototype);
 
-      // Set a vendor prefixed prop with the given val:
-      Anim.prototype.setVendorProperty = function(prop, val) {
-        this.setProperty('-webkit-' + prop, val);
-        this.setProperty('-moz-' + prop, val);
-        this.setProperty('-ms-' + prop, val);
-        return this;
-      };
-
-      // Set prop to value, deferred until .end() is invoked
-      // and adds the property to the list of transition props:
-      Anim.prototype.set = function(prop, val) {
-        this.transition(prop);
-        this._props[prop] = val;
-        return this;
-      };
-
-      // ncrement prop by val, deferred until .end() is invoked
-      // and adds the property to the list of transition props:
-      Anim.prototype.add = function(prop, val) {
-        if (!style) return;
-        var self = this;
-        return this.on('start', function() {
-          var curr = parseInt(self.current(prop), 10);
-          self.set(prop, curr + val + 'px');
-        });
-      };
-
-      // Decrement prop by val, deferred until .end() is invoked
-      // and adds the property to the list of transition props:
-      Anim.prototype.sub = function(prop, val) {
-        if (!style) return;
-        var self = this;
-        return this.on('start', function() {
-          var curr = parseInt(self.current(prop), 10);
-          self.set(prop, curr - val + 'px');
-        });
-      };
-
-      // Get computed or "current" value of prop:
-      Anim.prototype.current = function(prop) {
-        return style(this.el).getPropertyValue(prop);
-      };
-
-      // Add prop to the list of internal transition properties:
-      Anim.prototype.transition = function(prop) {
-        if (!this._transitionProps.indexOf(prop)) return this;
-        this._transitionProps.push(prop);
-        return this;
-      };
-
-      // Commit style properties, aka apply them to 
-      // the elemenet's style:
-      Anim.prototype.applyProperties = function() {
-        for (var prop in this._props) {
-          this.el.style.setProperty(prop, this._props[prop], '');
-        }
-        return this;
-      };
-
-      // Re-select element via selector, replacing
-      // the current element:
-      Anim.prototype.anim =
-        Anim.prototype.select = function(selector) {
-          this.el = Anim.select(selector);
+        // Buffer transform:
+        Anim.prototype.transform = function(transform) {
+          this._transforms.push(transform);
           return this;
         };
 
-      // Defer the given fn until the animation
-      // is complete:
-      Anim.prototype.then = function(fn) {
+        // Skew x and y:
+        Anim.prototype.skew = function(x, y) {
+          return this.transform('skew(' + x + 'deg, ' + (y || 0) + 'deg)');
+        };
 
-        // Invoke .end():
-        if (fn instanceof Anim) {
-          this.on('end', function() {
-            fn.run();
+        // Skew x by n:
+        Anim.prototype.skewX = function(n) {
+          return this.transform('skewX(' + n + 'deg)');
+        };
+
+        // Skew y by n:
+        Anim.prototype.skewY = function(n) {
+          return this.transform('skewY(' + n + 'deg)');
+        };
+
+        // Translate x and y axis:
+        Anim.prototype.translate =
+          Anim.prototype.to = function(x, y) {
+            return this.transform(translate.join('' + x + 'px, ' + (y || 0) + 'px'));
+          };
+
+        // Translate on x axis:
+        Anim.prototype.translateX =
+          Anim.prototype.x = function(n) {
+            return this.transform('translateX(' + n + 'px)');
+          };
+
+        // Translate on y axis:
+        Anim.prototype.translateY =
+          Anim.prototype.y = function(n) {
+            return this.transform('translateY(' + n + 'px)');
+          };
+
+        // Scale x and y axis by x, or
+        // individually scale x and y:
+        Anim.prototype.scale = function(x, y) {
+          return this.transform('scale(' + x + ', ' + (y || x) + ')');
+        };
+
+        // Scale x axis by n
+        Anim.prototype.scaleX = function(n) {
+          return this.transform('scaleX(' + n + ')');
+        };
+
+        // Scale y axis by n
+        Anim.prototype.scaleY = function(n) {
+          return this.transform('scaleY(' + n + ')');
+        };
+
+        // Define matrix transform:
+        Anim.prototype.matrix = function(m11, m12, m21, m22, m31, m32) {
+          return this.transform('matrix(' + [m11, m12, m21, m22, m31, m32].join(',') + ')');
+        };
+
+        // Rotate n degrees:
+        Anim.prototype.rotate = function(n) {
+          return this.transform('rotate(' + n + 'deg)');
+        };
+
+        // Set transition easing function to fn string.
+        // Following shortcuts available:
+        // no argument - "ease" is used
+        // "in" - "ease-in" is used
+        // "out" - "ease-out" is used
+        // "in-out" - "ease-in-out" is used
+        Anim.prototype.ease = function(fn) {
+          fn = ease[fn] || fn || 'ease';
+          return this.setVendorProperty('transition-timing-function', fn);
+        };
+
+        // Set animation properties:
+        Anim.prototype.animate = function(name, props) {
+          for (var i in props) {
+            if (props.hasOwnProperty(i)) {
+              this.setVendorProperty('animation-' + i, props[i]);
+            }
+          }
+          return this.setVendorProperty('animation-name', name);
+        };
+
+        // Set duration to n milliseconds:
+        Anim.prototype.duration = function(n) {
+          n = this._duration = 'string' == typeof n ? parseFloat(n) * 1000 : n;
+          return this.setVendorProperty('transition-duration', n + 'ms');
+        };
+
+        // Delay the animation by n milliseconds:
+        Anim.prototype.delay = function(n) {
+          n = 'string' == typeof n ? parseFloat(n) * 1000 : n;
+          return this.setVendorProperty('transition-delay', n + 'ms');
+        };
+
+        // Set prop to val, deferred until .end() is invoked:
+        Anim.prototype.setProperty = function(prop, val) {
+          this._props[prop] = val;
+          return this;
+        };
+
+        // Set a vendor prefixed prop with the given val:
+        Anim.prototype.setVendorProperty = function(prop, val) {
+          this.setProperty('-webkit-' + prop, val);
+          this.setProperty('-moz-' + prop, val);
+          this.setProperty('-ms-' + prop, val);
+          return this;
+        };
+
+        // Set prop to value, deferred until .end() is invoked
+        // and adds the property to the list of transition props:
+        Anim.prototype.set = function(prop, val) {
+          this.transition(prop);
+          this._props[prop] = val;
+          return this;
+        };
+
+        // ncrement prop by val, deferred until .end() is invoked
+        // and adds the property to the list of transition props:
+        Anim.prototype.add = function(prop, val) {
+          if (!style) return;
+          var self = this;
+          return this.on('start', function() {
+            var curr = parseInt(self.current(prop), 10);
+            self.set(prop, curr + val + 'px');
+          });
+        };
+
+        // Decrement prop by val, deferred until .end() is invoked
+        // and adds the property to the list of transition props:
+        Anim.prototype.sub = function(prop, val) {
+          if (!style) return;
+          var self = this;
+          return this.on('start', function() {
+            var curr = parseInt(self.current(prop), 10);
+            self.set(prop, curr - val + 'px');
+          });
+        };
+
+        // Get computed or "current" value of prop:
+        Anim.prototype.current = function(prop) {
+          return style(this.el).getPropertyValue(prop);
+        };
+
+        // Add prop to the list of internal transition properties:
+        Anim.prototype.transition = function(prop) {
+          if (!this._transitionProps.indexOf(prop)) return this;
+          this._transitionProps.push(prop);
+          return this;
+        };
+
+        // Commit style properties, aka apply them to 
+        // the elemenet's style:
+        Anim.prototype.applyProperties = function() {
+          for (var prop in this._props) {
+            this.el.style.setProperty(prop, this._props[prop], '');
+          }
+          return this;
+        };
+
+        // Re-select element via selector, replacing
+        // the current element:
+        Anim.prototype.anim =
+          Anim.prototype.select = function(selector) {
+            this.el = Anim.select(selector);
+            return this;
+          };
+
+        // Defer the given fn until the animation
+        // is complete:
+        Anim.prototype.then = function(fn) {
+
+          // Invoke .end():
+          if (fn instanceof Anim) {
+            this.on('end', function() {
+              fn.run();
+            });
+
+            // Callback
+          } else if ('function' == typeof fn) {
+            this.on('end', fn);
+
+            // Chain:
+          } else {
+            var clone = new Anim(this.el);
+            clone._transforms = this._transforms.slice(0);
+            this.then(clone);
+            clone.parent = this;
+            return clone;
+          }
+
+          return this;
+        };
+
+        // Return parent:
+        Anim.prototype.pop = function() {
+          return this.parent;
+        };
+
+        // Reset duration:
+        Anim.prototype.reset = function() {
+          this.el.style.webkitTransitionDuration =
+            this.el.style.mozTransitionDuration =
+            this.el.style.msTransitionDuration =
+            this.el.style.oTransitionDuration = '';
+          return this;
+        };
+
+        Anim.prototype.run = function(fn) {
+          var self = this;
+
+          // Emit "start" event:
+          this.emit('start');
+
+          // Transforms:
+          if (this._transforms.length) {
+            this.setVendorProperty('transform', this._transforms.join(' '));
+          }
+
+          // Transition properties:
+          this.setVendorProperty('transition-properties', this._transitionProps.join(', '));
+          this.applyProperties();
+
+          // Callback given:
+          if (fn) this.then(fn);
+
+          // Emit "end" when complete:
+          after.once(this.el, function() {
+            self.reset();
+            self.emit('end');
           });
 
-          // Callback
-        } else if ('function' == typeof fn) {
-          this.on('end', fn);
-
-          // Chain:
-        } else {
-          var clone = new Anim(this.el);
-          clone._transforms = this._transforms.slice(0);
-          this.then(clone);
-          clone.parent = this;
-          return clone;
-        }
-
-        return this;
-      };
-
-      // Return parent:
-      Anim.prototype.pop = function() {
-        return this.parent;
-      };
-
-      // Reset duration:
-      Anim.prototype.reset = function() {
-        this.el.style.webkitTransitionDuration =
-          this.el.style.mozTransitionDuration =
-          this.el.style.msTransitionDuration =
-          this.el.style.oTransitionDuration = '';
-        return this;
-      };
-
-      Anim.prototype.run = function(fn) {
-        var self = this;
-
-        // Emit "start" event:
-        this.emit('start');
-
-        // Transforms:
-        if (this._transforms.length) {
-          this.setVendorProperty('transform', this._transforms.join(' '));
-        }
-
-        // Transition properties:
-        this.setVendorProperty('transition-properties', this._transitionProps.join(', '));
-        this.applyProperties();
-
-        // Callback given:
-        if (fn) this.then(fn);
-
-        // Emit "end" when complete:
-        after.once(this.el, function() {
-          self.reset();
-          self.emit('end');
-        });
-
-        return this;
-      };
-
-    });
-
-    $.extend({
-      anim: require('anim')
+          return this;
+        };
+        return Anim;
+      })()
     })
   });
 })(window);
@@ -8043,15 +8014,12 @@
       AdjustNavbarLayout: function(screen) {
         if (!$('link[href*=ios]')[0]) return;
         screen = $(screen);
-        var siblings = screen.find('h1').siblings();
+        var h1 = screen.find('h1');
+        var siblings = h1.siblings();
         var whichSide;
         var oppositeSide;
         var rtl = ($('html').attr('dir') === 'rtl');
         var amount = 0;
-        var padding = 20;
-        var oppositeAmount = 25;
-        var h1 = screen.find('h1');
-        var navWidth = screen.find('nav').width();
         var hidden = false;
         var visibleSibling;
 
@@ -8098,8 +8066,8 @@
         };
 
         function handleOneSibling(sib) {
-          var sibling = sib || h1.siblings().eq(0);
-          amount = sibling.width();
+          var sibling = sib || h1.siblings();
+          amount = sibling[0].clientWidth;
           if (sibling.is(':first-child')) {
             whichSide = 'margin-right';
             oppositeSide = 'margin-left';
@@ -8116,9 +8084,11 @@
             }
           }
         }
+
         // If one sibling:
         if (siblings.length === 1) {
           handleOneSibling();
+          console.log(siblings[0].clientWidth)
 
           // If two siblings:
         } else if (siblings.length === 2) {
@@ -8143,13 +8113,14 @@
         }
         var props = {};
         props[whichSide] = amount;
-        props[oppositeSide] = 0;
+        // props[oppositeSide] = 0;
         var sibwidth = 0;
         if (siblings.size()) {
           siblings.forEach(function(item) {
-            sibwidth += $(item).width();
+            sibwidth += $(item)[0].clientWidth;
           });
         }
+        // alert(amount)
         var headerWidth = screen.find('nav').width() / 2;
         if ((sibwidth + 20) > headerWidth) {
           h1.css({
@@ -8161,8 +8132,10 @@
         }
       }
     });
-    $('screen').forEach(function(screen) {
-      $.AdjustNavbarLayout(screen);
+    setTimeout(function() {
+      $('screen').forEach(function(screen) {
+        $.AdjustNavbarLayout(screen);
+      });
     });
   });
 })();
@@ -9142,9 +9115,8 @@
             }
         }
         if (item.type.match(/custom/)) {
-          customValidation = item.type.split('custom-')[1];
           var cv = $.customValidators.filter(function(validator) {
-            return (validator.name) === customValidation;
+            return (validator.name) === item.type;
           });
           if (cv) {
             var result = $.validateWithRegex(item.element, cv[0].regex);
@@ -9867,7 +9839,7 @@
     // Create a stepper:
     //==================
     Stepper: function(options) {
-      if (!options) return $();
+      if (!options) return;
       if (!options.element) return;
       if (!options.min) return;
       if (!options.max) return;
@@ -10134,10 +10106,10 @@
       var iOSBusy = function() {
         var small;
         if (parseInt(settings.size, 10) < 30) {
-          spinner = "<svg class='busy' width='" + settings.size + "px' height='" + settings.size + "px' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='xMidYMid'>  <g x='0' y='0' width='100' height='100' fill='none' class='bk'><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(0 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(45 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.125s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(90 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.25s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(135 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.375s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(180 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.5s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(225 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.625s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(270 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.75s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(315 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.875s' repeatCount='indefinite'/></rect></g></svg>";
+          spinner = "<svg class='truck-busy small' width='" + settings.size + "px' height='" + settings.size + "px' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='xMidYMid'>  <g x='0' y='0' width='100' height='100' fill='none' class='bk'><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(0 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(45 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(90 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(135 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(180 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(225 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(270 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(315 50 50) translate(0 -30)'></rect></g></svg>";
           $this.append(spinner);
         } else {
-          spinner = "<svg class='busy' width='" + settings.size + "px' height='" + settings.size + "px' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='xMidYMid' class='uil-default'> <g x='0' y='0' width='100' height='100' fill='none'><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(0 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(30 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.08333333333333333s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(60 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.16666666666666666s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(90 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.25s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(120 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.3333333333333333s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(150 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.4166666666666667s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(180 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.5s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(210 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.5833333333333334s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(240 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.6666666666666666s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(270 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.75s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(300 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.8333333333333334s' repeatCount='indefinite'/></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(330 50 50) translate(0 -30)'><animate attributeName='opacity' from='1' to='0' dur='1s' begin='0.9166666666666666s' repeatCount='indefinite'/></rect> </g></svg>";
+          spinner = "<svg class='truck-busy' width='" + settings.size + "px' height='" + settings.size + "px' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='xMidYMid' class='uil-default'> <g x='0' y='0' width='100' height='100' fill='none'><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(0 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(30 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(60 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(90 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(120 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(150 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(180 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(210 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(240 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(270 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(300 50 50) translate(0 -30)'></rect><rect  x='46.5' y='40' width='7' height='20' rx='5' ry='5' fill='" + settings.color + "' transform='rotate(330 50 50) translate(0 -30)'></rect></g></svg>";
           $this.append(spinner);
         }
       };
@@ -10148,12 +10120,12 @@
         var androidActivityIndicator = null;
         var position = settings.position ? (' ' + settings.position) : '';
         if ($.isNativeAndroid) {
-          androidActivityIndicator = '<svg class="busy' + position + '" version="1.1" id="' + settings.id + '" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g><path fill="none" stroke="' + settings.color + '" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M74.2,65c2.7-4.4,4.3-9.5,4.3-15c0-15.7-12.8-28.5-28.5-28.5S21.5,34.3,21.5,50c0,5.5,1.6,10.6,4.3,15"/></g><polyline fill="none" stroke="' + settings.color + '" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="89.4,56.1 74.3,65 65.4,49.9 "/></svg>';
+          androidActivityIndicator = '<svg class="truck-busy' + position + '" version="1.1" id="' + settings.id + '" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g><path fill="none" stroke="' + settings.color + '" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="M74.2,65c2.7-4.4,4.3-9.5,4.3-15c0-15.7-12.8-28.5-28.5-28.5S21.5,34.3,21.5,50c0,5.5,1.6,10.6,4.3,15"/></g><polyline fill="none" stroke="' + settings.color + '" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="89.4,56.1 74.3,65 65.4,49.9 "/></svg>';
 
           $this.append(androidActivityIndicator);
           return;
         } else {
-          androidActivityIndicator = '<svg id="' + settings.id + '" class="busy' + position + '" x="0px" y="0px" viewBox="0 0 100 100"><circle stroke="url(#SVGID_1_)" cx="50" cy="50" r="28.5"/></svg>';
+          androidActivityIndicator = '<svg id="' + settings.id + '" class="truck-busy' + position + '" x="0px" y="0px" viewBox="0 0 100 100"><circle stroke="url(#SVGID_1_)" cx="50" cy="50" r="28.5"/></svg>';
           $this.append(androidActivityIndicator);
           $this.addClass('hasActivityIndicator');
           if (settings.position) {
@@ -10172,7 +10144,7 @@
 
       // For Windows 8/WP8:
       var winBusy = function() {
-        var spinner = $('<progress class="busy"></progress>');
+        var spinner = $('<progress class="truck-busy"></progress>');
         $(spinner).css({
           'color': settings.color
         });

@@ -468,9 +468,8 @@ var slideout = '<!DOCTYPE html>\n\
           // Callback to handle passed id:\n\
           callback: function(id) {\n\
             // Method to render templates in switch statement:\n\
-            var renderChosenTemplate = function(element, template, item) {\n\
+            var renderChosenTemplate = function(template, item) {\n\
               listView.setTemplate(template);\n\
-              listView.setElement(element);\n\
               listView.render(item);\n\
             };\n\
             // Handle passed id:\n\
@@ -478,22 +477,22 @@ var slideout = '<!DOCTYPE html>\n\
               case "music":\n\
                 $("#gridOfImages").empty();\n\
                 $("#myList").show();\n\
-                renderChosenTemplate("#myList", templates[0], music);\n\
+                renderChosenTemplate(templates[0], music);\n\
                 break;\n\
               case "documents":\n\
                 $("#gridOfImages").empty();\n\
                 $("#myList").show();\n\
-                renderChosenTemplate("#myList", templates[1], docs);\n\
+                renderChosenTemplate(templates[1], docs);\n\
                 break;\n\
               case "recipes":\n\
                 $("#gridOfImages").empty();\n\
                 $("#myList").show();\n\
-                renderChosenTemplate("#myList", templates[2], recipes);\n\
+                renderChosenTemplate(templates[2], recipes);\n\
                 break;\n\
               case "favorites":\n\
                 $("#gridOfImages").empty();\n\
                 $("#myList").show();\n\
-                renderChosenTemplate("#myList", templates[3], favorites);\n\
+                renderChosenTemplate(templates[3], favorites);\n\
                 break;\n\
             }\n\
           }\n\
