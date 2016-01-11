@@ -46,7 +46,7 @@ truckjs --name Fruits --os windows --type slideout
 ```
 
 
-You can also use shortened versions of the command flags: <code>n</code> for <code>name</code>, <code>p</code></code> for <code>path</code>, <code>o</code> for <code>os, and <code>t</code> for <code>type</code>. <strong>When using these, you must use a single hyphen</strong>strong>:
+You can also use shortened versions of the command flags: <code>n</code> for <code>name</code>, <code>p</code></code> for <code>path</code>, <code>o</code> for <code>os, and <code>t</code> for <code>type</code>. <strong>When using these, you must use a single hyphen</strong>:
 
 - -n The name for your project.
 - -p The path for your project. If not provided, will put on desktop.
