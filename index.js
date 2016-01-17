@@ -141,11 +141,11 @@ var navigation = '<!DOCTYPE html>\n\
 \n\
       // Setup Router:\n\
       //==============\n\
-      $.AppRoutes = $.Router();\n\
+      $.App = $.Router();\n\
 \n\
       // Define Routes:\n\
       //===============\n\
-      $.AppRoutes.addRoute([\n\
+      $.App.addRoute([\n\
         {\n\
           // Route for detail screen:\n\
           route: "detail",\n\
@@ -444,11 +444,11 @@ var slideout = '<!DOCTYPE html>\n\
 \n\
       // Setup Slide Out:\n\
       //=================\n\
-      var appSlideOut = $.SlideOut();\n\
+      var AppSlideOut = $.SlideOut();\n\
       // Notice names have `:` to \n\
       // indicate id for routing.\n\
       // Id will be used to render view.\n\
-      appSlideOut.populate([\n\
+      AppSlideOut.populate([\n\
         { "choice:music": "Music" },\n\
         { "choice:documents": "Documents"},\n\
         { "choice:recipes": "Recipes" },\n\
@@ -457,11 +457,10 @@ var slideout = '<!DOCTYPE html>\n\
 \n\
       // Define Routes:\n\
       //===============\n\
-      var AppRoutes;\n\
-      AppRoutes = $.Router();\n\
+      var App = $.Router();\n\
       // Define routes to handle ids\n\
       // from slide out menu items:\n\
-      AppRoutes.addRoute([\n\
+      App.addRoute([\n\
         {\n\
           // The route:\n\
           route: "choice", \n\
@@ -475,19 +474,15 @@ var slideout = '<!DOCTYPE html>\n\
             // Handle passed id:\n\
             switch (id) {\n\
               case "music":\n\
-                $("#myList").show();\n\
                 renderChosenTemplate(templates[0], music);\n\
                 break;\n\
               case "documents":\n\
-                $("#myList").show();\n\
                 renderChosenTemplate(templates[1], docs);\n\
                 break;\n\
               case "recipes":\n\
-                $("#myList").show();\n\
                 renderChosenTemplate(templates[2], recipes);\n\
                 break;\n\
               case "favorites":\n\
-                $("#myList").show();\n\
                 renderChosenTemplate(templates[3], favorites);\n\
                 break;\n\
             }\n\

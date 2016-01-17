@@ -485,7 +485,7 @@
   $.extend({
     lib: "TruckJS",
 
-    version: '0.0.1',
+    version: '1.0.0-beta.6',
 
     noop: function() {},
 
@@ -1335,7 +1335,6 @@
     },
 
     replaceWith: function(content) {
-      var parent = this.parentNode;
       if (content && content.nodeType && content.nodeType === 1) {
         $(content).off();
       } else if (content.constructor.toString().match(/DOMStack/)) {
@@ -2745,8 +2744,6 @@
       }
       var __exec = true;
       var __stopAfter;
-      var __stopCount = false;
-      var self = this;
       var token = ($.uuid());
       $.mediators[handle].push({
         token: token,
@@ -3440,8 +3437,11 @@
           });
         },
 
-        setToAutobox: function() {
+        setToAutobox: function(options) {
           __autobox = true;
+          __name = options.name || $.Box.__config.name;
+          __boxName = options.boxName || 'keyvaluepairs';
+          __key = options.key || this.getHandle();
         },
 
         isBoxed: function() {
@@ -3466,27 +3466,6 @@
   //=============
   // Define View:
   //=============
-  $.extend({
-    RegisteredViews: $.Stack([]),
-  });
-  $.extend($.RegisteredViews, {
-    getViewsByScreen: function(screen) {
-      var ret = [];
-      $.RegisteredViews.forEach(function(item) {
-        if (item.screen === screen) {
-          ret = item.views;
-        }
-      });
-      return ret;
-    },
-    getAllViews: function() {
-      var ret = [];
-      $.RegisteredViews.forEach(function(item) {
-        ret = ret.concat(item.views);
-      });
-      return ret;
-    }
-  });
 
   $.extend({
 
@@ -3537,7 +3516,6 @@
       var __template = options.template;
       var __model = options.model;
       var __mediator = options.mediator;
-      var __name = options.name || $.uuid();
       var __index = options.index || 1;
       var __rendered = false;
       var __variable = options.variable || 'data';
@@ -3555,40 +3533,11 @@
       var __escapeHTML = options.escapeHTML || false;
       var __renderCount = 0;
 
-      var parentScreen = (function() {
-        if (__element && __element.closest('screen').size()) {
-          return __element.closest('screen')[0].id;
-        }
-      })();
-
-
       //===================
       // Private Functions:
       //===================
 
-      var pluck = function(stack, property) {
-        var ret = [];
-        if (stack.size()) {
-          var len = stack.size();
-          var data = stack.getData();
-          for (var i = 0; i < len; i++) {
-            ret.push(data[i][property]);
-          }
-          return ret;
-        }
-      };
-      if (pluck($.RegisteredViews, parentScreen)) {
-        $.RegisteredViews.forEach(function(item) {
-          if (item.screen === parentScreen) {
-            item.views.push(__name);
-          }
-        });
-      } else {
-        $.RegisteredViews.push({
-          screen: parentScreen,
-          views: [__name]
-        });
-      }
+      var parsedTemplate;
 
       var parseView = function(template, variable) {
         var interpolate = /\$\{([\s\S]+?)\}/img;
@@ -3621,10 +3570,6 @@
           });
         }
       };
-
-      // Shell for parsing templates.
-      // It will hold the function returned by extractTemplate:
-      var parsedTemplate = function() {};
 
       // Get template from element:
       var extractTemplate = function() {
@@ -3759,7 +3704,7 @@
           };
 
           // Check extracted template:
-          if (!parsedTemplate && __template & $.type(__template) === 'string') {
+          if (!parsedTemplate && __template && $.type(__template) === 'string') {
             parsedTemplate = parseView(__template, __variable);
           }
 
@@ -3933,7 +3878,6 @@
         },
 
         unbind: function() {
-          var whichModel = __model;
           __model = undefined;
         },
 
@@ -4050,10 +3994,6 @@
           return __lastRenderTime;
         },
 
-        getViewName: function() {
-          return __name;
-        },
-
         escapeHTML: function(boolean) {
           if (boolean) {
             __escapeHTML = true;
@@ -4121,7 +4061,7 @@
 
       Router: function() {
 
-        var TruckRouteCntrl = $.Mediator('Truck-Routes');
+        $.receive('Truck-Routes', $.noop);
 
         return {
           addRoute: function(options) {
@@ -8088,7 +8028,6 @@
         // If one sibling:
         if (siblings.length === 1) {
           handleOneSibling();
-          console.log(siblings[0].clientWidth)
 
           // If two siblings:
         } else if (siblings.length === 2) {
@@ -8259,7 +8198,6 @@
       // Navigate Back to Non-linear Article
       //////////////////////////////////////
       GoBackToScreen: function(destination) {
-        var currentScreen = $.screens.getCurrent();
         var position = $.TruckRoutes.index(destination);
         var destinationScreen = getScreen(destination);
         var temp;
@@ -8415,7 +8353,6 @@
       selectedScreen = $('screen').eq(settings.selected);
       setToCurrent(selectedScreen);
 
-      var tempIdx;
       if (settings.labels.length) {
         settings.labels.forEach(function(label, idx) {
           tabbarTmpl.append(makeTab(label, settings.icons[idx], idx));
@@ -8563,8 +8500,6 @@
       });
 
       $('slideout').on('tap', 'li', function() {
-        var routes = $(this).attr('data-show').split('/');
-        var fullRoute = $.TruckRoutes.getFullRoute();
         var menuItems = slideout.find('li[data-show]');
         slideout.attr('aria-hidden', 'true')
 
@@ -8660,11 +8595,7 @@
       }
       var __view = settings.view;
 
-      var editLabel = settings.editLabel;
-      var doneLabel = settings.doneLabel;
-      var deleteLabel = settings.deleteLabel;
-      var placement = settings.placement;
-      var callback = settings.callback;
+      if (options) $.extend(settings, options);
 
       var deleteButton;
       var editButton;
@@ -8675,6 +8606,7 @@
       var moveUpIndicator;
       var moveDownIndicator;
       var element = settings.element;
+      var deleteLabel;
 
       var dir = $('html').attr('dir');
       dir = dir ? dir.toLowerCase() : '';
@@ -8687,7 +8619,7 @@
       }
 
       if (settings.deletable) {
-        deleteButton = $.concat('<button class="delete"><label>', deleteLabel, '</label><svg width="27px" height="30px" viewBox="0 0 27 30" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="delete-icon" fill="#3A3A3A"><g transform="translate(3.000000, 1.000000)"><path d="M1,6 L20,6 L20,24.9986131 C20,26.6562333 18.6639569,28 16.9998779,28 L4.00012207,28 C2.3432004,28 1,26.6569187 1,24.9986131 L1,6 Z M4,9 L5,9 L5,25 L4,25 L4,9 Z M8,9 L9,9 L9,25 L8,25 L8,9 Z M12,9 L13,9 L13,25 L12,25 L12,9 Z M16,9 L17,9 L17,25 L16,25 L16,9 Z" id="can"></path><path d="M0,4.96611425 L0,1.67759301 L5.1776507,1.7511163 L6.482399,0 L14.5847825,0 L15.8789491,1.7511163 L21,1.7511163 L21,4.9447157 L0,4.96611425 L0,4.96611425 Z" id="lid"></path></g></g></g></svg></button>');
+        deleteButton = $.concat('<button class="delete"><label>', settings.deleteLabel, '</label><svg width="27px" height="30px" viewBox="0 0 27 30" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="delete-icon" fill="#3A3A3A"><g transform="translate(3.000000, 1.000000)"><path d="M1,6 L20,6 L20,24.9986131 C20,26.6562333 18.6639569,28 16.9998779,28 L4.00012207,28 C2.3432004,28 1,26.6569187 1,24.9986131 L1,6 Z M4,9 L5,9 L5,25 L4,25 L4,9 Z M8,9 L9,9 L9,25 L8,25 L8,9 Z M12,9 L13,9 L13,25 L12,25 L12,9 Z M16,9 L17,9 L17,25 L16,25 L16,9 Z" id="can"></path><path d="M0,4.96611425 L0,1.67759301 L5.1776507,1.7511163 L6.482399,0 L14.5847825,0 L15.8789491,1.7511163 L21,1.7511163 L21,4.9447157 L0,4.96611425 L0,4.96611425 Z" id="lid"></path></g></g></g></svg></button>');
         deletionIndicator = '<span class="deletion-indicator"><svg width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="deletion-indicator"><g id="ios-indicator"><circle id="ios-circle" fill="#FF0000" cx="10" cy="10" r="10"></circle><path d="M3.5,10 L16.5,10" id="ios-bar" stroke="#FFFFFF" stroke-width="2" stroke-linecap="square"></path></g><path d="M2,13 L9.9294326,16.8406135 L17.1937075,1.90173332" id="checkmark" stroke="#FA0303" stroke-width="2"></path></g></g></svg></span>';
         $(element).addClass('deletable');
       }
@@ -8697,7 +8629,7 @@
         $(element).addClass('editable');
       }
 
-      editButton = $.concat('<button class="edit">', editLabel, '</button>');
+      editButton = $.concat('<button class="edit">', settings.editLabel, '</button>');
       var nav = $(element).closest('screen').find('nav');
       nav.append(editButton);
       nav.find('.back').hide();
@@ -8939,7 +8871,6 @@
       var __passed = false;
       var __errors = [];
       var __result = [];
-      var customValidation;
 
       // Helper to validate form elements:
       //==================================
@@ -9246,7 +9177,6 @@
       var selections = settings.selected;
       var name = settings.name;
       var list = $(settings.element);
-      var multiSelectIcon = '<svg width="30px" height="30px" viewBox="0 0 30 30" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g id="multi-select-icon" stroke="#979797"><g id="multi-select-circle-+-mulit-select-checkmark" transform="translate(2.000000, 2.000000)"><circle id="multi-select-circle" cx="13" cy="13" r="13"></circle><path d="M4.71521456,15.9877529 L13.0000002,20.7028494 L19.977049,5.70284941" id="mulit-select-checkmark"></path></g></g></g></svg>';
       list.addClass('multi-select-list');
       list.find('li').forEach(function(ctx, idx) {
         var value = ctx.getAttribute("data-select") !== null ? ctx.getAttribute("data-select") : "";
@@ -9284,7 +9214,6 @@
         if (item.hasClass('selected')) {
           item.removeClass('selected').removeAttr('aria-checked');
           item.find('input').removeProp('checked');
-          var whichItem = item.index();
           var dataObj = {
             index: item.index(),
             value: item.attr('data-select')
@@ -9329,7 +9258,6 @@
     // Create a switch control:
     //=========================
     Switch: function(options) {
-      var self = this;
       if (!options || !options.element) return;
       var __checked = false;
       var settings = {
@@ -9486,7 +9414,8 @@
       var cancelButton = options.cancelButton ? '<button class="cancel" role="button">' + settings.cancelButton + '</button>' : '';
       var continueButton = settings.continueButton ? '<button class="continue" role="button">' + settings.continueButton + '</button>' : '';
       var callback = settings.callback || $.noop;
-      var panelOpen, panelClose, popup;
+      var panelClose;
+      var popup;
       if (settings.empty) {
         popup = $.concat('<div' + width + ' class="popup closed" role="alertdialog" id="', id, '"></div>');
       } else {
@@ -9607,7 +9536,6 @@
 
         var segmented;
         var labels = (settings.labels) ? settings.labels : [];
-        var selected = settings.selected;
         var __selection;
 
         function createSegmentedButton() {

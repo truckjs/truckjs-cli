@@ -12,7 +12,7 @@ interface TruckStatic {
    * @param context A DOM HTMLElement to use as context
    * @return DOMStack
    */
-  (selector: string | HTMLElement | Document, context?: HTMLElement | DOMStack): Truck;
+  (selector: string | HTMLElement | Element | Document, context?: HTMLElement | DOMStack): Truck;
 
   /**
    * Binds a function to be executed when the DOM has finished loading.
@@ -508,11 +508,6 @@ interface TruckStatic {
   Model(data: any, handle: string): Model;
 
   /**
-   * A stack to hold registered views.
-   */
-  RegisteredViews: Stack;
-
-  /**
    * This method create a View object.
    *
    * options An object of key/value pairs to initialize the view.
@@ -766,7 +761,12 @@ interface TruckStatic {
     /**
      * This method lets you  You can handle the result using a success callback, or use a thenable instead.
      *
-     * @param 
+     * @param driver A string indicating the driver to use.
+     * @param name A name for the database.
+     * @param size The size of the database. Default is 4980736 KB.
+     * @param boxName The name of the dataStore.
+     * @param version The version of the dataStore. Default is "1.0"
+     * @param description A description of the dataStore. Default is empty.
      * @return void
      */
     createInstance(options: {
@@ -797,7 +797,12 @@ interface TruckStatic {
     /**
      * Sets the configuration values for Box to use.
      *
-     * @param options An object of key value pairs.
+     * @param driver A string indicating the driver to use.
+     * @param name A name for the database.
+     * @param size The size of the database. Default is 4980736 KB.
+     * @param boxName The name of the dataStore.
+     * @param version The version of the dataStore. Default is "1.0"
+     * @param description A description of the dataStore. Default is empty.
      * @return void
      */
     config(options: {
@@ -1050,7 +1055,7 @@ interface DOMStack extends Object {
    * @param element The element to push to the DOMStack data array.
    * @return DOMStack
    */
-  push(element: HTMLElement): void;
+  push(element: HTMLElement | Element): void;
 
   /**
    * This method pops the last item off of the DOMStack's data array.
@@ -1643,7 +1648,7 @@ interface Truck extends DOMStack {
    * @param
    * @return Truck Returns a Truck DOMStack
    */
-  attr(attribute: string, value: string | number): Truck;
+  attr(attribute: string, value: string | number | boolean): Truck;
 
   /**
    * Remove an attribute from each element in the set of matched elements.
@@ -1696,7 +1701,7 @@ interface Truck extends DOMStack {
    *
    * @return string A string representing the element value.
    */
-  val(): string;
+  val(): string | number;
 
   /**
    * Set the value of each element in the set of matched elements.
@@ -1771,7 +1776,7 @@ interface Truck extends DOMStack {
    * @param useCapture Setting the third argument to true will trigger event bubbling. The default is false.
    * @return Truck
    */
-  on(eventType: string, handler?: (eventObject: Event) => any, capturePhase?: boolean): Truck;
+  on(eventType: string | Event, handler?: (eventObject: Event) => any, capturePhase?: boolean): Truck;
 
   /**
    * Add a handler to an event for elements. When a selector is provided as the second argument, this implements a delegated event where Truck listens on the element for events on the designated descendent element.
@@ -1782,7 +1787,7 @@ interface Truck extends DOMStack {
    * @param useCapture Setting the third argument to true will trigger event bubbling. The default is false.
    * @return Truck
    */
-  on(eventType: string, selector: any, handler?: (eventObject: Event) => any, capturePhase?: boolean): Truck;
+  on(eventType: string | Event, selector: any, handler?: (eventObject: Event) => any, capturePhase?: boolean): Truck;
 
   /**
    * Remove a handler for an event from the elements. If the second argument is a selector, it tries to undelegate the event.
@@ -1794,7 +1799,7 @@ interface Truck extends DOMStack {
    * @param useCapture Setting the third argument to true will trigger event bubbling. The default is false.
    * @return Truck
    */
-  off(eventType?: string, selector?: any, handler?: (eventObject: Event) => any, capturePhase?: boolean): Truck;
+  off(eventType?: string | Event, selector?: any, handler?: (eventObject: Event) => any, capturePhase?: boolean): Truck;
 
   /**
   * Trigger an event on an element.
@@ -1802,7 +1807,7 @@ interface Truck extends DOMStack {
   * @param eventType The event to trigger.
   * @return void
   */
-  trigger(eventType: string): void;
+  trigger(eventType: string | Event): void;
 
   /** 
    * Returns all elements that match the provided selector.
@@ -2489,14 +2494,25 @@ interface Stack {
    * @param options And object of the following key/value pairts to box the model.
    * @return void
    */
-   box(options: Object): void;
+   box(options: {
+      autobox: boolean;
+      boxName: string;
+      key: string;
+      name: string;
+
+   }): void;
 
    /**
    * This method tells Truck to automatically store any changes to the model in its Box for local data persistence.
    *
    * @return void
    */
-   setToAutobox(): void;
+   setToAutobox(options: {
+      autobox: boolean;
+      boxName: string;
+      key: string;
+      name: string;
+   }): void;
 
    /**
    * This method tests whether the model has been boxed or saved in Truck's local data persistence Box.
@@ -2549,7 +2565,7 @@ interface View {
   resetIndex(): void;
 
   /**
-   * This lets you set the number for the views index to start from.
+   * This lets you set the number for the view's index to start from.
    *
    * @param number The number to start the index value from.
    * @return void
@@ -2653,7 +2669,7 @@ interface View {
    *
    * @return parent The parent element the view is bound to.
    */
-  getParent(): Truck;
+  getElement(): Truck;
 
   /**
    *
@@ -2661,7 +2677,7 @@ interface View {
    * @param element 
    * @return void
    */
-  setParent(element: string | Element | DOMStack): void;
+  setElement(element: string | Element | DOMStack): void;
 
   /**
    * Tell a view to stop responding to render commands. Even though the view may be bound to a model, after it has been stopped, it will not respond to changes in the model. You can make the model respond again to model changes by using the `restart` method.
@@ -2735,13 +2751,6 @@ interface View {
    * @return string A Unix timestamp
    */
   getLastRenderTime(): string;
-
-  /**
-   * Get the name for the view that was provided during initialization.
-   *
-   * @return string The name of the view.
-   */
-  getViewName(): string;
 
   /**
    * Tell the view to escape all HTML elements. By default Truck does not escpate HTML code. You can also set the view up to automatically escape HTML at initialization time with the property `escapeHTML` set to true.
@@ -2905,10 +2914,6 @@ interface Promise<T> {
 }
 
 interface PromiseConstructor {
-  /**
-   * A reference to the prototype.
-   */
-  prototype: Promise<any>;
 
   /**
    * Creates a new Promise.
@@ -3252,7 +3257,7 @@ interface TruckStatic {
   /**
    * This method allows you to throw up a mask covering the entire screen. You can provide an opacity value to control the mask's opacity to your liking.
    */
-  Block(opacity: number): void;
+  Block(opacity: string): void;
   
   /**
    * This removes any currently displayed mask.
@@ -3299,8 +3304,8 @@ interface TruckStatic {
   Sheet(options: {
     id?: string;
     background?: string;
-    handle?: boolean;
-    slideDown?: boolean;
+    handle?: boolean | string;
+    slideDown?: boolean | string;
   }): void;
   
   /**
