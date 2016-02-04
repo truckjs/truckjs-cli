@@ -33,11 +33,10 @@ var template = '<!DOCTYPE html>\n\
   <link rel="stylesheet" href="./dist/styles/truck-' + os + '.min.css">\n\
   <script src="./dist/truck.min.js"></script>\n\
   <script>\n\
-    /// <reference path="typings/tsd.d.ts" />\n\
     $(function() {\n\
       var ListView = $.View({\n\
         element: "#list",\n\
-        template: "<li><h3>Item ${ data }</h3></li>"\n\
+        template: "<li><h3>Item {= data }</h3></li>"\n\
       });\n\
       ListView.render(["One","Two","Three"])\n\
     });\n\
@@ -124,13 +123,13 @@ var navigation = '<!DOCTYPE html>\n\
               console.log($(this).text());\n\
             }\n\
           }],\n\
-          template: "<li data-goto=\'detail:${ data.guid }\'><h3>${ $.view.index }: ${ data.firstName } ${ data.lastName }</h3><aside><disclosure></disclosure></aside></li>"\n\
+          template: "<li data-goto=\'detail:{= data.guid }\'><h3>{= $.view.index }: {= data.firstName } {= data.lastName }</h3><aside><disclosure></disclosure></aside></li>"\n\
         }),\n\
         \n\
         chosenPersonView: $.View({\n\
           name: "chosenPersonView",\n\
           element: "#chosenPersonList",\n\
-          template: "<li><h3>First Name: ${ data.firstName }</h3></li><li><h3>Last Name: ${ data.lastName }</h3></li>"\n\
+          template: "<li><h3>First Name: {= data.firstName }</h3></li><li><h3>Last Name: {= data.lastName }</h3></li>"\n\
         })\n\
       };\n\
 \n\
@@ -200,9 +199,9 @@ var slideout = '<!DOCTYPE html>\n\
   <script id="music-template" type="text/x-template">\n\
     <li>\n\
       <div>\n\
-        <h3>${ data.title }</h3>\n\
-        <h4>${ data.album }</h4>\n\
-        <p>${ data.description }</p>\n\
+        <h3>{= data.title }</h3>\n\
+        <h4>{= data.album }</h4>\n\
+        <p>{= data.description }</p>\n\
       </div>\n\
     </li>\n\
   </script>\n\
@@ -210,10 +209,10 @@ var slideout = '<!DOCTYPE html>\n\
   <!-- Script Documents Template -->\n\
   <script id="documents-template" type="text/x-template">\n\
     <li class="center-vertical">\n\
-      <h3>${ data.title }</h3>\n\
-      <h4>${ data.subtitle }</h4>\n\
+      <h3>{= data.title }</h3>\n\
+      <h4>{= data.subtitle }</h4>\n\
       <aside>\n\
-        <span class="counter">${ data.amount }</span>\n\
+        <span class="counter">{= data.amount }</span>\n\
       </aside>\n\
     </li>\n\
   </script>\n\
@@ -222,17 +221,17 @@ var slideout = '<!DOCTYPE html>\n\
   <script id="recipes-template" type="text/x-template">\n\
     <li>\n\
       <div>\n\
-        <h3>${ data.name }</h3>\n\
+        <h3>{= data.name }</h3>\n\
         <h4>Ingredients</h4>\n\
         <ul>\n\
           {{ data.ingredients.forEach(function(ingredient) { }}\n\
-            <li>${ ingredient }</li>\n\
+            <li>{= ingredient }</li>\n\
           {{ }); }}\n\
         </ul>\n\
         <h4>Directions</h4>\n\
         <ol>\n\
           {{ data.directions.forEach(function(direction) { }}\n\
-            <li>${ direction }</li>\n\
+            <li>{= direction }</li>\n\
           {{ }); }}\n\
         </ol>\n\
       </div>\n\
@@ -242,7 +241,7 @@ var slideout = '<!DOCTYPE html>\n\
   <!-- Script Favorites Template -->\n\
   <script id="favorites-template" type="text/x-template">\n\
     <li>\n\
-       <h3>${ data }</h3>\n\
+       <h3>{= data }</h3>\n\
     </li> \n\
   </script>\n\
   \n\
@@ -544,11 +543,11 @@ var tabbar ='<!DOCTYPE html>\n\
     <section>\n\
       <ul class="list" id="musicList">\n\
         <li>\n\
-          <img  data-src="${ music.image }" height="80px">\n\
+          <img  data-src="{= music.image }" height="80px">\n\
           <div>\n\
-            <h3>${ music.title }</h3>\n\
-            <h4>${ music.album }</h4>\n\
-            <p>${ music.description }</p>\n\
+            <h3>{= music.title }</h3>\n\
+            <h4>{= music.album }</h4>\n\
+            <p>{= music.description }</p>\n\
           </div>\n\
         </li>\n\
       </ul>\n\
@@ -563,10 +562,10 @@ var tabbar ='<!DOCTYPE html>\n\
       <ul class="list" id="docsList">\n\
         <script type="text/x-template">\n\
           <li class="center-vertical">\n\
-            <h3>${ doc.title }</h3>\n\
-            <h4>${ doc.subtitle }</h4>\n\
+            <h3>{= doc.title }</h3>\n\
+            <h4>{= doc.subtitle }</h4>\n\
             <aside>\n\
-              <span class="counter">${ doc.amount }</span>\n\
+              <span class="counter">{= doc.amount }</span>\n\
             </aside>\n\
           </li>\n\
         </script>\n\
@@ -584,17 +583,17 @@ var tabbar ='<!DOCTYPE html>\n\
         <script type="text/x-template">\n\
           <li>\n\
             <div>\n\
-              <h3>${ recipe.name }</h3>\n\
+              <h3>{= recipe.name }</h3>\n\
               <h4>Ingredients</h4>\n\
               <ul>\n\
                 {{ recipe.ingredients.forEach(function(ingredient) { }}\n\
-                  <li>${ ingredient }</li>\n\
+                  <li>{= ingredient }</li>\n\
                 {{ }); }}\n\
               </ul>\n\
               <h4>Directions</h4>\n\
               <ol>\n\
                 {{ recipe.directions.forEach(function(direction) { }}\n\
-                  <li>${ direction }</li>\n\
+                  <li>{= direction }</li>\n\
                 {{ }); }}\n\
               </ol>\n\
             </div>\n\
@@ -611,7 +610,7 @@ var tabbar ='<!DOCTYPE html>\n\
     <section>\n\
       <ul class="list" id="favoritesList">\n\
         <li>\n\
-           <h3>${ data }</h3>\n\
+           <h3>{= data }</h3>\n\
         </li>  \n\
        </ul>\n\
     </section>\n\
