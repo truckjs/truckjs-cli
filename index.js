@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 var fs = require('fs');
-var mkdirp = require('mkdirp');
 var writefile = require('writefile');
-var cpr = require('cpr');
 var ncp = require('ncp').ncp;
 var p = require("path");
+var replace = require('replace-in-file');
 var argv = require('yargs').usage('Usage: --name "Icecream" --path "~/Documents/myWebApp" --os: (ios, android, win) --type (plain, navigation, tab, slideout').argv;
 var name = argv.name || argv.n;
 var type = argv.type || argv.t || 'default';
 var homedir = (process.platform === "win32") ? process.env.HOMEPATH : process.env.HOME;
 var path = argv.path || argv.p || p.join(homedir, 'Desktop');
 var os = argv.os || argv.o || 'ios';
-
 var pkg = require('./package.json');
+var browserify = argv.browserify || argv.b;
+var mkdirp = require('mkdirp');
 
 var noop = function() {};
 
@@ -130,7 +130,11 @@ var navigation = '<!DOCTYPE html>\n\
           name: "chosenPersonView",\n\
           element: "#chosenPersonList",\n\
           template: "<li><h3>First Name: {= data.firstName }</h3></li><li><h3>Last Name: {= data.lastName }</h3></li>"\n\
-        })\n\
+        }),\n\
+\n\
+        // Setup Router:\n\
+        router: $.Router()\n\
+\n\
       };\n\
 \n\
       // Render views:\n\
@@ -138,13 +142,9 @@ var navigation = '<!DOCTYPE html>\n\
       App.VIPView.render();\n\
 \n\
 \n\
-      // Setup Router:\n\
-      //==============\n\
-      $.App = $.Router();\n\
-\n\
       // Define Routes:\n\
       //===============\n\
-      $.App.addRoute([\n\
+      App.router.addRoute([\n\
         {\n\
           // Route for detail screen:\n\
           route: "detail",\n\
@@ -842,38 +842,144 @@ var tabbar ='<!DOCTYPE html>\n\
 // Define function to create directories and write files:
 //=======================================================
 var createProject = function() {
-  if (name) {
-    ncp.limit = 16;
-    mkdirp(p.join(path, name), noop);
-    
-    // Copy files:
-    ncp(p.join(__dirname, 'dist', 'truck'), p.join(path, name, 'dist'), noop);
-    ncp(p.join(__dirname, 'dist', 'styles', os), p.join(path, name, 'dist', 'styles'), noop);
-    ncp(p.join(__dirname, 'dist', 'typings'), p.join(path, name, 'dist', 'typings'), noop);
+  if (browserify) {
+    if (name) {
+      ncp.limit = 16;
+      mkdirp(p.join(path, name), noop);
+      
+      // Copy files:
+      ncp(p.join(__dirname, 'dist', 'truck'), p.join(path, name, 'dist'), noop);
+      ncp(p.join(__dirname, 'dist', 'styles', os), p.join(path, name, 'dist', 'styles'), noop);
+      ncp(p.join(__dirname, 'dist', 'typings'), p.join(path, name, 'dist', 'typings'), noop);
+      ncp(p.join(__dirname, 'src', 'package.json'), p.join(path, name, 'package.json'), noop);
+      ncp(p.join(__dirname, 'src', 'gulpfile.js'), p.join(path, name, 'gulpfile.js'), noop);
 
-    // Create file
+      mkdirp(p.join(path, name, 'dev'), noop);
 
-    switch(type) {
-      case 'default':
-        writefile(p.join(path, name, 'index.html'), template, noop);
-        break;
-      case 'navigation':
-        writefile(p.join(path, name, 'index.html'), navigation, noop);
-        break;
-      case 'slideout':
-        writefile(p.join(path, name, 'index.html'), slideout, noop);
-        break;
-      case 'tabbar':
-        writefile(p.join(path, name, 'index.html'), tabbar, noop);
-        ncp(p.join(__dirname, 'dist', 'images'), p.join(path, name, 'images'), noop);
-        break;
-      default:
-        writefile(p.join(path, name, 'index.html'), template, noop);
-        break;
+
+      switch(type) {
+        case 'default':
+          mkdirp(p.join(path, name, 'dev'), noop);
+          ncp(p.join('src', 'html', 'default.html'), p.join(path, name, 'index.html'), noop);
+          ncp(p.join('src', 'js', 'default.js'), p.join(path, name, 'dev', 'app.js'), noop);
+          break;
+        case 'navigation':
+          mkdirp(p.join(path, name, 'dev'), noop);
+          mkdirp(p.join(path, name, 'data'), noop);
+          mkdirp(p.join(path, name, 'images'), noop);
+          ncp(p.join(__dirname, 'src', 'html', 'navigation.html'), p.join(path, name, 'index.html'), noop);
+          ncp(p.join(__dirname, 'src', 'js', 'navigation.js'), p.join(path, name, 'dev', 'app.js'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'lums.json'), p.join(path, name, 'data', 'lums.json'), noop);
+          ncp(p.join(__dirname, 'dist', 'images', 'luminaries'), p.join(path, name, 'images'), noop);
+          break;
+        case 'slideout':
+          mkdirp(p.join(path, name, 'dev'), noop);
+          mkdirp(p.join(path, name, 'images', 'music'), noop);
+          mkdirp(p.join(path, name, 'data'), noop);
+          ncp(p.join(__dirname, 'src', 'html', 'slideout.html'), p.join(path, name, 'index.html'), noop);
+          ncp(p.join(__dirname, 'src', 'js', 'slideout.js'), p.join(path, name, 'dev', 'app.js'), noop);
+          ncp(p.join(__dirname, 'dist', 'images'), p.join(path, name, 'images'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'docs.json'), p.join(path, name, 'data', 'docs.json'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'favorites.json'), p.join(path, name, 'data', 'favorites.json'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'music.json'), p.join(path, name, 'data', 'music.json'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'recipes.json'), p.join(path, name, 'data', 'recipes.json'), noop);
+          ncp(p.join(__dirname, 'dist', 'images', 'music'), p.join(path, name, 'images', 'music'), noop);
+          break;
+        case 'tabbar':
+          mkdirp(p.join(path, name, 'dev'), noop);
+          mkdirp(p.join(path, name, 'data'), noop);
+          mkdirp(p.join(path, name, 'images', 'music'), noop);
+          mkdirp(p.join(path, name, 'images', 'icons'), noop);
+          ncp(p.join(__dirname, 'src', 'html', 'tabbar.html'), p.join(path, name, 'index.html'), noop);
+          ncp(p.join(__dirname, 'src', 'js', 'tabbar.js'), p.join(path, name, 'dev', 'app.js'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'docs.json'), p.join(path, name, 'data', 'docs.json'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'favorites.json'), p.join(path, name, 'data', 'favorites.json'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'music.json'), p.join(path, name, 'data', 'music.json'), noop);
+          ncp(p.join(__dirname, 'src', 'data', 'recipes.json'), p.join(path, name, 'data', 'recipes.json'), noop);
+          setTimeout(function() {
+            ncp(p.join(__dirname, 'dist', 'images', 'icons'), p.join(path, name, 'images', 'icons'), noop);
+          }, 100);
+          setTimeout(function() {
+            ncp(p.join(__dirname, 'dist', 'images', 'music'), p.join(path, name, 'images', 'music'), noop);
+          }, 200);
+          break;
+        default:
+          mkdirp(p.join(path, name, 'dev'), noop);
+          ncp(p.join(__dirname, 'src', 'html', 'default.html'), p.join(path, name, 'index.html'), noop);
+          ncp(p.join(__dirname, 'src', 'js', 'default.js'), p.join(path, name, 'dev', 'app.js'), noop);
+          break;
+      }
+
+      // setTimeout(function() {
+        replace({
+          replace: /APP_NAME/g,
+          with: name,
+          files: [
+            p.join(path, name, 'index.html'),
+            p.join(path, name, 'package.json')
+          ],
+        });
+        replace({
+          replace: /OS_THEME/g,
+          with: os,
+          files: p.join(path, name, 'index.html')
+        });
+      // });
     }
 
-    console.log('We\'re done. Go check out your app project.');
+  } else {
+    if (name) {
+      ncp.limit = 16;
+      mkdirp(p.join(path, name), noop);
+      
+      // Copy files:
+      ncp(p.join(__dirname, 'dist', 'truck'), p.join(path, name, 'dist'), noop);
+      ncp(p.join(__dirname, 'dist', 'styles', os), p.join(path, name, 'dist', 'styles'), noop);
+      ncp(p.join(__dirname, 'dist', 'typings'), p.join(path, name, 'dist', 'typings'), noop);
+
+      // Create file
+
+      switch(type) {
+        case 'default':
+          writefile(p.join(path, name, 'index.html'), template, noop);
+          break;
+        case 'navigation':
+          writefile(p.join(path, name, 'index.html'), navigation, noop);
+          break;
+        case 'slideout':
+          writefile(p.join(path, name, 'index.html'), slideout, noop);
+          break;
+        case 'tabbar':
+          writefile(p.join(path, name, 'index.html'), tabbar, noop);
+          ncp(p.join(__dirname, 'dist', 'images'), p.join(path, name, 'images'), noop);
+          break;
+        default:
+          writefile(p.join(path, name, 'index.html'), template, noop);
+          break;
+      }
+    }
   }
+  if (browserify) {
+
+    setTimeout(function() {
+      replace({
+        replace: /APP_NAME/g,
+        with: name,
+        files: [
+          p.join(path, name, 'index.html'),
+          p.join(path, name, 'package.json')
+        ],
+      });
+    }, 50);
+    setTimeout(function() {
+      replace({
+        replace: /OS_THEME/g,
+        with: os,
+        files: p.join(path, name, 'index.html')
+      });
+    }, 150);
+  }
+  console.log("We're done. Go check out your app project.");
 }
 
 createProject();
