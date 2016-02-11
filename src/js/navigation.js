@@ -17,7 +17,6 @@ $(function() {
   //=============
   var App = {
     VIPView: $.View({
-      name: "VIPView1",
       element: "#arrayTemplate1", 
       model: LumsModel,
       startIndexFrom: 1,
@@ -38,7 +37,6 @@ $(function() {
     }),
     
     chosenPersonView: $.View({
-      name: "chosenPersonView",
       element: "#chosenPersonList",
       template: 
       `<li>

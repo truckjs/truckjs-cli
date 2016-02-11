@@ -81,7 +81,9 @@ $(function() {
 
   var app = {
     // Define view:
-    listView: $.View({name: "listView"}),
+    listView: $.View({
+      element: "#myList"
+    }),
 
     // Define router:
     router: $.Router()
@@ -91,7 +93,6 @@ $(function() {
   //==============================
   
   app.listView.setTemplate(templates[0]);
-  app.listView.setElement("#myList");
   // This may not be ready in time.
   // See fetch for music data above for fallback:
   app.listView.render(music);

@@ -112,7 +112,6 @@ var navigation = '<!DOCTYPE html>\n\
       //=============\n\
       var App = {\n\
         VIPView: $.View({\n\
-          name: "VIPView1",\n\
           element: "#arrayTemplate1", \n\
           model: LumsModel,\n\
           startIndexFrom: 1,\n\
@@ -127,7 +126,6 @@ var navigation = '<!DOCTYPE html>\n\
         }),\n\
         \n\
         chosenPersonView: $.View({\n\
-          name: "chosenPersonView",\n\
           element: "#chosenPersonList",\n\
           template: "<li><h3>First Name: {= data.firstName }</h3></li><li><h3>Last Name: {= data.lastName }</h3></li>"\n\
         }),\n\
@@ -151,8 +149,6 @@ var navigation = '<!DOCTYPE html>\n\
 \n\
           // Capture id in callback:\n\
           callback: function(id) {\n\
-            // Get current view model:\n\
-            var model = App.VIPView.getModel().getData();\n\
             // Filter model with id passed in route:\n\
             var whichPerson = model.filter(function(person) {\n\
               return person.guid === id;\n\
@@ -436,9 +432,10 @@ var slideout = '<!DOCTYPE html>\n\
    \n\
       // Define initial state of View:\n\
       //==============================\n\
-      var listView = $.View({name: "listView"});\n\
+      var listView = $.View({\n\
+        element: "#myList"\n\
+      });\n\
       listView.setTemplate(templates[0]);\n\
-      listView.setElement("#myList");\n\
       listView.render(music);\n\
 \n\
       // Setup Slide Out:\n\
