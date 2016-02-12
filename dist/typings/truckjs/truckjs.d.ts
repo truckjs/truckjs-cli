@@ -124,7 +124,7 @@ interface TruckStatic {
    * The method will defer the execution of its callback until the call stack is clear.
    *
    * @param callback A callback to execute after a delay.
-   * @return    Function.
+   * @return  Function.
    */
   defer(callback: Function): Function;
 
@@ -349,21 +349,21 @@ interface TruckStatic {
   replace(newElement: string | Element | DOMStack, oldElement: string | Element | DOMStack): void;
 
   /** 
-   *
+   * This method lets you check whether an object is empty or not.
    *
    * @return boolean
    */
   isEmptyObject(): boolean;
 
   /** 
-   *
+   * Test whether something is an integer or not.
    *
    * @return boolean
    */
   isInteger(): boolean;
 
   /** 
-   *
+   * Test whether something is a float or not.
    *
    * @return boolean
    */
@@ -544,7 +544,7 @@ interface TruckStatic {
     events?: any[];
     startIndexFrom?: number;
     escapeHTML?: boolean;
-   }): View;
+  }): View;
 
   /**
    * Get the current screen.
@@ -561,8 +561,14 @@ interface TruckStatic {
    */
   getPrevious(): Truck;
 
+  /**
+   * This object holds the routes of a TruckJS app.
+   */
   TruckRoutes: Model;
 
+  /**
+   * This is the TruckJS router. It creates a routing object, to which you add routes with the method: `addRoutes`.
+   */
   Router(): Router;
 
 
@@ -581,12 +587,12 @@ interface TruckStatic {
      * A number representing milliseconds to express when to refect a JSONP request.
      */
     timeout?: number;
-    
+  
     /**
      * The optional name for the callback when the server response will execute. The default value is "callback". However some sites may use a different name for their JSONP function. Consult the documentation on the site to ascertain the correct value for this callback. 
      */
     callbackName?: string;
-    
+  
     /**
      * This value determines whether the callbacks and script associate with JSONP persist or are purged after the request returns. By default this is set to true, meaning that they will be purged.
      */
@@ -667,12 +673,14 @@ interface TruckStatic {
 
 
   /**
+   * This method lets you validate to passwords. It takes two inputs to compare values. Optionally you can provide a third argument for minimum length for the password.
    *
-   *
-   * @password
+   * @input1 The first input to check.
+   * @input2 The second input to check.
+   * @minimum An optional length for the password.
    * @return boolean
    */
-  validatePassword(input1, input2, minimum): boolean;
+  validatePassword(input1: string, input2: string, minimum: number): boolean;
 
 
   /**
@@ -814,12 +822,12 @@ interface TruckStatic {
      * @return void
      */
     config(options: {
-       driver?: string;
-       name?: string;
-       size?: number;
-       boxName?: string;
-       version?: string;
-       description?: string;
+      driver?: string;
+      name?: string;
+      size?: number;
+      boxName?: string;
+      version?: string;
+      description?: string;
     });
   }
   
@@ -2169,384 +2177,384 @@ interface Stack {
    *
    * @return array An array of all data in the stack.
    */
-  getData(): any[]; 
+  getData(): any[];
 }
 
 /** 
  * Interface for Model
  */
- interface Model {
-   (data: any, handel: string): Model;
-   /**
-    * Returns the key used by Box for storing the model for local persistence.
-    *
-    * return key The key used by Box when a model is boxed or set to auto-box. This key is used to store the model in whatever store Box is using for the current browser.
-    */
-   key(): string
-
-   /**
-    * Returns the number of items in a model if the model holds a collection. If the model holds a single object, this returns undefined. 
-    *
-    * return number The number of items in a model.
-    */
-   size(): number;
-
-   /**
-   * This method returns the element at the position in the model indicated by the argument. This is a zero-based number.
-   * If the model does not hold a collection but a single object, this returns undefined.
-   * position amongst its siblings.
+interface Model {
+  (data: any, handel: string): Model;
+  /**
+   * Returns the key used by Box for storing the model for local persistence.
    *
-   * @param number Index value indicating the node you wish to access from a collection. This is zero-based.
+   * return key The key used by Box when a model is boxed or set to auto-box. This key is used to store the model in whatever store Box is using for the current browser.
    */
-   eq(number: number): any;
+  key(): string
 
-   /**
-    * The method lets you set a value on a property in an object in the model. If the property does not exist, it will be addded. Otherwise the property's current value will be replaced with the new value.
-    *
-    * @param propertyName The property to update.
-    * @param value The value to set to the property.
-    * @param doNotPropogate An optional true boolean. When present the model will not propagate its changes when they occur.
-    * @return void
-    */
-   setProp(propertyName: string, value: any, doNotPropogate?: boolean): void;
-
-   /**
-    * Get the value of the provided property.
-    *
-   * @param doNotPropogate A boolean to controller change propagation.
-    * @return value The value of the property.
-    */
-   getProp(propertyName: string): any;
-
-   /**
-    * When the model holds a single object, this method lets you do a wholesale replacement of the model's object with the one provided as an argument.
-    *
-    * @param object The object to replace the current object with.
-    * @return void
-    */
-   setObject(object: Object): void;
-
-   /**
-    * When the model contains a single object, this method lets you merge an object with the model's current object so you can add multple property/value pairs in one pass.
-    *
-    * @param object The object to merge with the model's object.
-    * @return void
-    */
-   mergeObject(object: Object): void;
-
-   /**
-   * This pushes the provided data onto the model when it is a collection.
+  /**
+   * Returns the number of items in a model if the model holds a collection. If the model holds a single object, this returns undefined. 
    *
-   * @param data The data to push on the the model.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
+   * return number The number of items in a model.
    */
-   push(data: any, doNotPropogate?: boolean): void;
+  size(): number;
 
-   /**
-   * This pops the last item off of the model's collection.
-   *
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return data The last item in the model's collection.
-   */
-   pop(doNotPropogate?: boolean): any;
-
-   /**
-   * This inserts the provided data at the beginning of a model's collection.
-   *
-   * @param data The data to insert at the beginning of the model's collection.
-   * @return void
-   */
-   unshift(data: any, doNotPropogate?: boolean): void;
-
-   /**
-   * This pops the first item off of the model's collection.
-   *
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return data The first item of the model's collection
-   */
-   shift(doNotPropogate?: boolean): any;
-
-   /**
-   * Concatenate an array of data to the model's collection.
-   *
-   * @param data An array of data to add to the end of the model's collection.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
-   */
-   concat(data: any[], doNotPropogate?: boolean): void;
-
-   /**
-   * Insert data into the provided position of the model's collection. If the position provided is greater than the number of items in the collection, the data will be push onto the end of the colleciton.
-   *
-   * @param data The data to insert.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
-   */
-   insert(position: number, data: any, doNotPropogate?: boolean): void;
-
-   /**
-   * Remove all duplicates from the model's collection.
-   *
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
-   */
-   unique(doNotPropogate?: boolean): void;
-
-   /**
-   * Get the index of an object in a collection based on a property and value.
-   *
-   * @param propertyName The property to search for.
-   * @param value The value that the property must have.
-   * @return number The zero-based position of the object.
-   */
-   index(propertyName: string, value: any): number;
-
-   /**
-   * Performs a filter of the model's colleciton equivalent to the array function.
-   *
-   * @param
-   * @return
-   */
-   filter(callback: (value: any, index: number, array: any[]) => boolean, thisArg?: any): any[];
-
-   /**
-   *Performs a map of the model's colleciton equivalent to the array function.
-   *
-   * @param
-   * @return
-   */
-   map(callback: (value: any, index: number, array: any[]) => any, thisArg?: any): any[];
-
-   /**
-   * Returns an array of objects of all the properties and their values that are in the model's collection.
-   *
-   * @param propertyName The name of the property to retrieve results for.
-   * @return array An array of all the properties and their values in the model.
-   */
-   pluck(propertyName: string): any[];
-
-   /**
-   * Performs a sort of the model's colleciton equivalent to the array function.
-   *
-   * @param start A number indicating the start position.
-   * @param deleteCount A number indicating how may indices to splice.
-   * @param item Optional items to insert.
-   * @return
-   */
-   sort(start: number, deleteCount?: number, ...item: any[]): void;
-
-   /**
-   * Reverses the order of the model's collection.
-   *
-   * @return void
-   */
-   reverse(): void;
-
-   /**
-   * This method takes a comma separated list of properties by which to sort the model's collection. If a property is preceded by a hyphen the sort order is descending, otherwise it is ascending.
-   *
-   * @return void
-   */
-   sortBy(...property: any[]): void;
-
-   /**
-   * The method lets you delete the property of an object when the model holds a single object, or, if a number is provided, it deletes the object at that location in the model's collection. The number is zero-based.
-   *
-   * @param item The item or index position.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
-   */
-   delete(item: any, doNotPropogate?: boolean): void;
-
-   /**
-   * This method lets you run a callback that gets the model's collection as its argument.
-   *
-   * @param callback A callback to execute.
-   * @return void
-   */
-   run(callback: (data: any) => void): void;
-
-   /**
-   * This method forces the model to propagate its current state so that any mediators or dispatch receivers can intercept it.
-   *
-   * @return void
-   */
-   poke(): void;
-
-   /**
-   * Get the handle the model is using.
-   *
-   * @return string
-   */
-   getHandle(): string;
-
-   /**
-   * This lets you set the handle the model uses when it propagates its changes. This allows you to change which mediators and dispatch receivers are reacting to the model's changes.
-   *
-   * @param handle A string defining a new handle for the model.
-   * @return void
-   */
-   setHandle(handle: string): void;
-
-   /**
-   * This method deletes all data from the model. In the case of a model with a single object, the object is reduced to {}. In the case of a collection, it is reduced to [].
-   *
-   * @return void
-   */
-   purge(): void;
-
-   /**
-   * Check whether the model has any data. This works for models with single objects or collections.
-   *
-   * @return boolean
-   */
-   hasData(): boolean;
-
-   /**
-   * This lets you check what type of model you are dealing with. If the model holds an object, this returns 'object'. If it holds a collection, it returns 'array'.
-   *
-   * @return string
-   */
-   getType(): string;
-
-   /**
-   *  Lets you check whether the model is a collection that is iterable or not. If the collection is empty or it is an object, this will return false.
-   *
-   * @return boolean
-   */
-   isIterable(): boolean;
-
-   /**
-   * Performs a forEach loop equivalent to the array function with context first and index last.
-   *
-   * @param callback A callback to execute.
-   * @return void
-   */
-   forEach(callback: (context: any, index: number) => any): void;
-
-   /**
-   * This method returns whatever data the model holds. This could be an object or an array.
-   *
-   * @return any Whatever data the model holds.
-   */
-   getData(): any;
-
-   /**
-   *  This method lets you set the value of a property on the model's object. When the holds a single object, this is equivalent to `model.setProp(propertyName, value)`. If the property does not exist on the object, it will be created. If the property already exists, its value will be replaced by the value provided.
-   *
-   * @param propertyName The property whose value you want to set.
-   * @param value The value to set for the property.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
-   */
-   setItemProp(propertyName: string, value: any, doNotPropogate?: boolean): void;
-
-   /**
-   *  This method lets you set the value of a property on an object in a model's collection. To do so you must provide an index position for the object in the colleciton. If the property does not exist on the object at that index, it will be created, otherwise its value will be updated to the value provided.
-   *
-   * @param
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
-   */
-   setItemProp(index: number, propertyName: string, value: any, doNotPropogate?: boolean): void;
-
-   /**
-   * This method lets you get the value of the model's object.
-   *
-   * @param propertyName The property whose value you want to retrieve.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return value The value of the property.
-   */
-   getItemProp(propertyName: string): any;
-
-   /**
-   * This method lets you get the value of a propert from an object at the index position your provided in the model's collection.
-   *
-   * @param index The index position of the object whose property you want to retrieve.
-   * @param propertyName The property whose value you want to retrieve.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return value The value of the property.
-   */
-   getItemProp(index: number, propertyName: string): any;
-
-   /**
-   * This method allows you to delete an item from the model's collection based on the index of the object.
-   *
-   * @param index A number indicated the zero-based position of the object your wish to delete.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
-   */
-   deleteItemProp(index: number, doNotPropogate?: boolean): void;
-
-   /**
-   * This method allows you to delete a property from an item at the designated position in the model's collection.
-   *
-   * @param index Position of the object in the model's colleciton.
-   * @propertyName The name of the property you wish to delete.
-   * @param doNotPropogate A boolean to controller change propagation.
-   * @return void
-   */
-   deleteItemProp(index: number, propertyName: string, doNotPropogate?: boolean): void;
-
-   /**
-   * Find out when the modle was last changed.
-   *
-   * @return string A Unix timestamp indicating the last time the model was changed.
-   */
-   getLastModTime(): string;
-
-   /**
-   * This method lets you store the model in Truck's Box for local data persistence. It takes an object of three arguments: { key: "my-key", boxName: "my-data-store" }. The key is used as the key in the data store for retrieving later. The boxName is the name for the data store.
-   *
-   * @param options And object of the following key/value pairts to box the model.
-   * @return void
-   */
-   box(options: {
-      autobox: boolean;
-      boxName: string;
-      key: string;
-      name: string;
-
-   }): void;
-
-   /**
-   * This method tells Truck to automatically store any changes to the model in its Box for local data persistence.
-   *
-   * @return void
-   */
-   setToAutobox(options: {
-      autobox: boolean;
-      boxName: string;
-      key: string;
-      name: string;
-   }): void;
-
-   /**
-   * This method tests whether the model has been boxed or saved in Truck's local data persistence Box.
-   *
-   * @return boolean
-   */
-   isBoxed(): boolean;
-
-   /**
-   * This method tests whether the model is set to automatically persist its state in Truck's Box for local data persistence.
-   *
-   * @return boolean
-   */
-   isAutoBoxed(): boolean;
-
-   /**
-   * Get the last time the model was stored in Truck's Box for local data persistence. 
-   *
-   * @return string A unix timestamp.
-   */
-   getLastBoxTime(): string;
- }
-
- /**
-  * Interface for View
+  /**
+  * This method returns the element at the position in the model indicated by the argument. This is a zero-based number.
+  * If the model does not hold a collection but a single object, this returns undefined.
+  * position amongst its siblings.
+  *
+  * @param number Index value indicating the node you wish to access from a collection. This is zero-based.
   */
+  eq(number: number): any;
+
+  /**
+   * The method lets you set a value on a property in an object in the model. If the property does not exist, it will be addded. Otherwise the property's current value will be replaced with the new value.
+   *
+   * @param propertyName The property to update.
+   * @param value The value to set to the property.
+   * @param doNotPropogate An optional true boolean. When present the model will not propagate its changes when they occur.
+   * @return void
+   */
+  setProp(propertyName: string, value: any, doNotPropogate?: boolean): void;
+
+  /**
+   * Get the value of the provided property.
+   *
+  * @param doNotPropogate A boolean to controller change propagation.
+   * @return value The value of the property.
+   */
+  getProp(propertyName: string): any;
+
+  /**
+   * When the model holds a single object, this method lets you do a wholesale replacement of the model's object with the one provided as an argument.
+   *
+   * @param object The object to replace the current object with.
+   * @return void
+   */
+  setObject(object: Object): void;
+
+  /**
+   * When the model contains a single object, this method lets you merge an object with the model's current object so you can add multple property/value pairs in one pass.
+   *
+   * @param object The object to merge with the model's object.
+   * @return void
+   */
+  mergeObject(object: Object): void;
+
+  /**
+  * This pushes the provided data onto the model when it is a collection.
+  *
+  * @param data The data to push on the the model.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  push(data: any, doNotPropogate?: boolean): void;
+
+  /**
+  * This pops the last item off of the model's collection.
+  *
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return data The last item in the model's collection.
+  */
+  pop(doNotPropogate?: boolean): any;
+
+  /**
+  * This inserts the provided data at the beginning of a model's collection.
+  *
+  * @param data The data to insert at the beginning of the model's collection.
+  * @return void
+  */
+  unshift(data: any, doNotPropogate?: boolean): void;
+
+  /**
+  * This pops the first item off of the model's collection.
+  *
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return data The first item of the model's collection
+  */
+  shift(doNotPropogate?: boolean): any;
+
+  /**
+  * Concatenate an array of data to the model's collection.
+  *
+  * @param data An array of data to add to the end of the model's collection.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  concat(data: any[], doNotPropogate?: boolean): void;
+
+  /**
+  * Insert data into the provided position of the model's collection. If the position provided is greater than the number of items in the collection, the data will be push onto the end of the colleciton.
+  *
+  * @param data The data to insert.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  insert(position: number, data: any, doNotPropogate?: boolean): void;
+
+  /**
+  * Remove all duplicates from the model's collection.
+  *
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  unique(doNotPropogate?: boolean): void;
+
+  /**
+  * Get the index of an object in a collection based on a property and value.
+  *
+  * @param propertyName The property to search for.
+  * @param value The value that the property must have.
+  * @return number The zero-based position of the object.
+  */
+  index(propertyName: string, value: any): number;
+
+  /**
+  * Performs a filter of the model's colleciton equivalent to the array function.
+  *
+  * @param
+  * @return
+  */
+  filter(callback: (value: any, index: number, array: any[]) => boolean, thisArg?: any): any[];
+
+  /**
+  *Performs a map of the model's colleciton equivalent to the array function.
+  *
+  * @param
+  * @return
+  */
+  map(callback: (value: any, index: number, array: any[]) => any, thisArg?: any): any[];
+
+  /**
+  * Returns an array of objects of all the properties and their values that are in the model's collection.
+  *
+  * @param propertyName The name of the property to retrieve results for.
+  * @return array An array of all the properties and their values in the model.
+  */
+  pluck(propertyName: string): any[];
+
+  /**
+  * Performs a sort of the model's colleciton equivalent to the array function.
+  *
+  * @param start A number indicating the start position.
+  * @param deleteCount A number indicating how may indices to splice.
+  * @param item Optional items to insert.
+  * @return
+  */
+  sort(start: number, deleteCount?: number, ...item: any[]): void;
+
+  /**
+  * Reverses the order of the model's collection.
+  *
+  * @return void
+  */
+  reverse(): void;
+
+  /**
+  * This method takes a comma separated list of properties by which to sort the model's collection. If a property is preceded by a hyphen the sort order is descending, otherwise it is ascending.
+  *
+  * @return void
+  */
+  sortBy(...property: any[]): void;
+
+  /**
+  * The method lets you delete the property of an object when the model holds a single object, or, if a number is provided, it deletes the object at that location in the model's collection. The number is zero-based.
+  *
+  * @param item The item or index position.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  delete(item: any, doNotPropogate?: boolean): void;
+
+  /**
+  * This method lets you run a callback that gets the model's collection as its argument.
+  *
+  * @param callback A callback to execute.
+  * @return void
+  */
+  run(callback: (data: any) => void): void;
+
+  /**
+  * This method forces the model to propagate its current state so that any mediators or dispatch receivers can intercept it.
+  *
+  * @return void
+  */
+  poke(): void;
+
+  /**
+  * Get the handle the model is using.
+  *
+  * @return string
+  */
+  getHandle(): string;
+
+  /**
+  * This lets you set the handle the model uses when it propagates its changes. This allows you to change which mediators and dispatch receivers are reacting to the model's changes.
+  *
+  * @param handle A string defining a new handle for the model.
+  * @return void
+  */
+  setHandle(handle: string): void;
+
+  /**
+  * This method deletes all data from the model. In the case of a model with a single object, the object is reduced to {}. In the case of a collection, it is reduced to [].
+  *
+  * @return void
+  */
+  purge(): void;
+
+  /**
+  * Check whether the model has any data. This works for models with single objects or collections.
+  *
+  * @return boolean
+  */
+  hasData(): boolean;
+
+  /**
+  * This lets you check what type of model you are dealing with. If the model holds an object, this returns 'object'. If it holds a collection, it returns 'array'.
+  *
+  * @return string
+  */
+  getType(): string;
+
+  /**
+  *  Lets you check whether the model is a collection that is iterable or not. If the collection is empty or it is an object, this will return false.
+  *
+  * @return boolean
+  */
+  isIterable(): boolean;
+
+  /**
+  * Performs a forEach loop equivalent to the array function with context first and index last.
+  *
+  * @param callback A callback to execute.
+  * @return void
+  */
+  forEach(callback: (context: any, index: number) => any): void;
+
+  /**
+  * This method returns whatever data the model holds. This could be an object or an array.
+  *
+  * @return any Whatever data the model holds.
+  */
+  getData(): any;
+
+  /**
+  *  This method lets you set the value of a property on the model's object. When the holds a single object, this is equivalent to `model.setProp(propertyName, value)`. If the property does not exist on the object, it will be created. If the property already exists, its value will be replaced by the value provided.
+  *
+  * @param propertyName The property whose value you want to set.
+  * @param value The value to set for the property.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  setItemProp(propertyName: string, value: any, doNotPropogate?: boolean): void;
+
+  /**
+  *  This method lets you set the value of a property on an object in a model's collection. To do so you must provide an index position for the object in the colleciton. If the property does not exist on the object at that index, it will be created, otherwise its value will be updated to the value provided.
+  *
+  * @param
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  setItemProp(index: number, propertyName: string, value: any, doNotPropogate?: boolean): void;
+
+  /**
+  * This method lets you get the value of the model's object.
+  *
+  * @param propertyName The property whose value you want to retrieve.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return value The value of the property.
+  */
+  getItemProp(propertyName: string): any;
+
+  /**
+  * This method lets you get the value of a propert from an object at the index position your provided in the model's collection.
+  *
+  * @param index The index position of the object whose property you want to retrieve.
+  * @param propertyName The property whose value you want to retrieve.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return value The value of the property.
+  */
+  getItemProp(index: number, propertyName: string): any;
+
+  /**
+  * This method allows you to delete an item from the model's collection based on the index of the object.
+  *
+  * @param index A number indicated the zero-based position of the object your wish to delete.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  deleteItemProp(index: number, doNotPropogate?: boolean): void;
+
+  /**
+  * This method allows you to delete a property from an item at the designated position in the model's collection.
+  *
+  * @param index Position of the object in the model's colleciton.
+  * @propertyName The name of the property you wish to delete.
+  * @param doNotPropogate A boolean to controller change propagation.
+  * @return void
+  */
+  deleteItemProp(index: number, propertyName: string, doNotPropogate?: boolean): void;
+
+  /**
+  * Find out when the modle was last changed.
+  *
+  * @return string A Unix timestamp indicating the last time the model was changed.
+  */
+  getLastModTime(): string;
+
+  /**
+  * This method lets you store the model in Truck's Box for local data persistence. It takes an object of three arguments: { key: "my-key", boxName: "my-data-store" }. The key is used as the key in the data store for retrieving later. The boxName is the name for the data store.
+  *
+  * @param options And object of the following key/value pairts to box the model.
+  * @return void
+  */
+  box(options: {
+    autobox: boolean;
+    boxName: string;
+    key: string;
+    name: string;
+
+  }): void;
+
+  /**
+  * This method tells Truck to automatically store any changes to the model in its Box for local data persistence.
+  *
+  * @return void
+  */
+  setToAutobox(options: {
+    autobox: boolean;
+    boxName: string;
+    key: string;
+    name: string;
+  }): void;
+
+  /**
+  * This method tests whether the model has been boxed or saved in Truck's local data persistence Box.
+  *
+  * @return boolean
+  */
+  isBoxed(): boolean;
+
+  /**
+  * This method tests whether the model is set to automatically persist its state in Truck's Box for local data persistence.
+  *
+  * @return boolean
+  */
+  isAutoBoxed(): boolean;
+
+  /**
+  * Get the last time the model was stored in Truck's Box for local data persistence. 
+  *
+  * @return string A unix timestamp.
+  */
+  getLastBoxTime(): string;
+}
+
+/**
+ * Interface for View
+ */
 interface View {
 
   /**
@@ -3177,27 +3185,27 @@ interface TruckStatic {
    */
   Form(options: [
     {
-      element: string | Element | DOMStack ,
+      element: string | Element | DOMStack,
       type: string;
       callback: Function;
     }
   ]): {
   
-  /**
-   * Get an object of all errors from the form.
-   */
-    getErrors(): any[];
+      /**
+       * Get an object of all errors from the form.
+       */
+      getErrors(): any[];
   
-  /**
-   * Check whether there were any validation errors.
-   */
-    error(): boolean;
+      /**
+       * Check whether there were any validation errors.
+       */
+      error(): boolean;
   
-  /**
-   * Get the form's data as a JSON object.
-   */
-    get(): JSON;
-  };
+      /**
+       * Get the form's data as a JSON object.
+       */
+      get(): JSON;
+    };
   
   /**
    * 
@@ -3211,14 +3219,14 @@ interface TruckStatic {
 
   }): {
   
-  /**
-   * Get the current SelectList selection. This is an object with an index number and value.
-   */
-    getSelection(): {
-      index: number;
-      value: any;
-    };
-  }
+      /**
+       * Get the current SelectList selection. This is an object with an index number and value.
+       */
+      getSelection(): {
+        index: number;
+        value: any;
+      };
+    }
   
   /**
    * 
@@ -3231,14 +3239,14 @@ interface TruckStatic {
     model?: Model
   }): {
   
-  /**
-   * Get the current selections on the Multi-Select List. This returns an array of objects with index numbers and values.
-   */
-    getSelection(): [{
-      index: number,
-      value: any;
-    }];
-  };
+      /**
+       * Get the current selections on the Multi-Select List. This returns an array of objects with index numbers and values.
+       */
+      getSelection(): [{
+        index: number,
+        value: any;
+      }];
+    };
   
   /**
    * This method setups up a switch. It takes an element, a possible name for the switch's checkbox, a value for the switch, a checked value (true or false) and a two callbacks: one for when the switch is turned on and another for when it is turned off.
@@ -3251,14 +3259,14 @@ interface TruckStatic {
     onCallback: Function;
     offCallback: Function;
   }): {
-  /**
-   * Get the current state of the switch. This returns an object with the checked state and value of the switch.
-   */
-    getValue(): {
-      checked: boolean;
-      value: any;
+      /**
+       * Get the current state of the switch. This returns an object with the checked state and value of the switch.
+       */
+      getValue(): {
+        checked: boolean;
+        value: any;
+      }
     }
-  }
   
   /**
    * This method allows you to throw up a mask covering the entire screen. You can provide an opacity value to control the mask's opacity to your liking.
@@ -3298,14 +3306,14 @@ interface TruckStatic {
     selected: number;
     callback: Function;
   }): {
-  /**
-   * Get the currently selected button. This reutrns a zero-based number.
-   */
-    getSelection(): {
+      /**
+       * Get the currently selected button. This reutrns a zero-based number.
+       */
+      getSelection(): {
         index: number;
         element: Truck;
+      };
     };
-  };
   
   /**
    * Create a sheet. You can control whether the sheet slides down from the top or up from the bottom with the `slideDown` property. If true, it slides down from the top, otherwise it slides up form the bottom. You can also control whether the handle appears or not with the handle property set to false or ture. The default is true. You can provide a background color in hex format using the `background` property.
@@ -3341,11 +3349,11 @@ interface TruckStatic {
     max: number;
     defaultValue: any;
   }): {
-  /**
-   * This method lets you get the curren value of the stepper.
-   */
-    getValue(): any;
-  }
+      /**
+       * This method lets you get the curren value of the stepper.
+       */
+      getValue(): any;
+    }
   
   /**
    * This method lets you set up a popover widget. It takes an id, a title, and a callback to execute when the user taps on items. If no title is provided, it will be empty.
