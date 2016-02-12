@@ -44,7 +44,7 @@ var createProject = function() {
         case 'default':
           mkdirp(p.join(path, name, 'dev'), noop);
           ncp(p.join('src', 'html', 'browserify', 'default.html'), p.join(path, name, 'index.html'), noop);
-          ncp(p.join('src', 'js', 'default.js'), p.join(path, name, 'dev', 'app.js'), noop);
+          ncp(p.join(__dirname, 'src', 'js', 'default.js'), p.join(path, name, 'dev', 'app.js'), noop);
           break;
         case 'navigation':
           mkdirp(p.join(path, name, 'dev'), noop);
