@@ -1,13 +1,13 @@
 {
   "name": "truckjs",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Framework for creating hybrid mobile apps.",
   "main": "index.js",
   "bin": {
     "truckjs": "./index.js"
   },
   "repository": {
-    "url": "git://github.com/rbiggs/truckjs-npm.git"
+    "url": "git://github.com/truckjs/truckjs-cli.git"
   },
   "keywords": [
     "truckjs",
@@ -18,9 +18,9 @@
   "author": "Robert Biggs",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rbiggs/truckjs-npm/issues"
+    "url": "https://github.com/truckjs/truckjs-cli/issues"
   },
-  "homepage": "https://github.com/rbiggs/truckjs-npm#readme",
+  "homepage": "https://github.com/truckjs/truckjs-cli#readme",
   "dependencies": {
     "bluebird": "~2.9.24",
     "mkdirp": "^0.5.1",
