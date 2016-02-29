@@ -1,8 +1,8 @@
-$(function() {
+$(() => {
 
   // Initialize empty model:
   //========================
-  var LumsModel = $.Model([], "luminaries-handle");
+  let LumsModel = $.Model([], "luminaries-handle");
 
   // Fetch data and put in model:
   //=============================
@@ -15,7 +15,7 @@ $(function() {
 
   // Init views:
   //=============
-  var App = {
+  let App = {
     VIPView: $.View({
       element: "#arrayTemplate1", 
       model: LumsModel,

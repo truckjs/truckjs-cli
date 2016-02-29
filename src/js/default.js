@@ -1,5 +1,5 @@
-$(function() {
-  var ListView = $.View({
+$(() => {
+  let ListView = $.View({
     element: "#list",
     template: 
     `<li>

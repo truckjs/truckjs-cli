@@ -1,37 +1,37 @@
-$(function() {
+$(() => {
 
   // Placeholders for data:
-  var music;
-  var docs; 
-  var recipes;
-  var favorites;
+  let music;
+  let docs; 
+  let recipes;
+  let favorites;
 
   // Fetch data:
   //============
   fetch('./data/music.json')
     .then($.json)
-    .then(function(obj) {
+    .then((obj) => {
       music = obj;
       // Render listView with data:
       app.listView.render(music);
     });  
   fetch('./data/docs.json')
     .then($.json)
-    .then(function(obj) {
+    .then((obj) => {
       docs = obj;
     });
   fetch('./data/recipes.json')
     .then($.json)
-    .then(function(obj) {
+    .then((obj) => {
       recipes = obj;
     });
   fetch('./data/favorites.json')
     .then($.json)
-    .then(function(obj) {
+    .then((obj) => {
       favorites = obj;
     });
 
-  var templates = [];
+  let templates = [];
   // Music Template:
   templates[0] = 
   `<li>
@@ -79,7 +79,7 @@ $(function() {
     <h3>{= data }</h3>
   </li>`;
 
-  var app = {
+  let app = {
     // Define view:
     listView: $.View({
       element: "#myList"
@@ -99,7 +99,7 @@ $(function() {
 
   // Setup Slide Out:
   //=================
-  var AppSlideOut = $.SlideOut();
+  let AppSlideOut = $.SlideOut();
   // Notice names have `:` to 
   // indicate id for routing.
   // Id will be used to render view.

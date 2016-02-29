@@ -1,31 +1,31 @@
-$(function() {
+$(() => {
 
   // Fetch data:
   //============
   fetch('./data/music.json')
     .then($.json)
-    .then(function(obj) {
+    .then((obj) => {
       musicView.render(obj);
     });  
   fetch('./data/docs.json')
     .then($.json)
-    .then(function(obj) {
+    .then((obj) => {
       docsView.render(obj);
     });
   fetch('./data/recipes.json')
     .then($.json)
-    .then(function(obj) {
+    .then((obj) => {
       recipesView.render(obj);
     });
   fetch('./data/favorites.json')
     .then($.json)
-    .then(function(obj) {
+    .then((obj) => {
       favoritesView.render(obj);
     });
 
   // Options for Tab Bar:
   //=====================
-  var opts = {
+  const opts = {
      icons: ["music", "docs", "recipes", "top_rated"],
      labels: ["Music", "Docs", "Recipes", "Favs"],
      selected: 1,
@@ -37,7 +37,7 @@ $(function() {
   $.MyTabbar = $.TabBar(opts);
   // Music View:
   //============
-  var musicView = $.View({
+  let musicView = $.View({
     element: "#musicList",
     variable: "music",
     template:
@@ -52,7 +52,7 @@ $(function() {
   });
   // Docs View:
   //===============
-  var docsView = $.View({
+  let docsView = $.View({
     element: "#docsList",
     variable: "doc",
     template:
@@ -66,7 +66,7 @@ $(function() {
   });
   // Recipes View:
   //==================
-  var recipesView = $.View({
+  let recipesView = $.View({
     element: "#recipesList",
     variable: "recipe",
     template:
@@ -90,7 +90,7 @@ $(function() {
   });
   // Favorites View:
   //====================
-  var favoritesView = $.View({
+  let favoritesView = $.View({
     element: "#favoritesList",
     template:
     `<li>
