@@ -1,6 +1,6 @@
 {
   "name": "truckjs",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Framework for creating hybrid mobile apps.",
   "main": "index.js",
   "bin": {

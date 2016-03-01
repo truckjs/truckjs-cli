@@ -516,7 +516,7 @@ interface TruckStatic {
   Model(data: any, handle: string): Model;
 
   /**
-   * This method create a View object.
+   * This method creates a View object.
    *
    * options An object of key/value pairs to initialize the view.
    * @return View A View object.

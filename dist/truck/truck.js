@@ -1,6 +1,6 @@
 /*
   Truck Wheels.
-  This is a light and nimble DOM library providing jQuery-compatibility in a small footprint. If jQuery is loaded first, these do not get executed. Truck Engine and Body will use jQuery instead.
+  This is a light and nimble DOM library providing jQuery-compatibility in a small footprint.
 */
 /*jshint quotmark:false */
 /*jshint nonew:false */
@@ -1980,7 +1980,7 @@
 })();
 
 /*
-  Truck Engine. These modules are used by both Truck Engine and jQuery. They provide the functionality for the Truck Model View Controller components and other utilities and plugins for use with both libraries.
+  Truck Engine. These modules provide the functionality for the Truck Model View Controller components and other utilities and plugins.
 */
 
 // Truck Engine - Environment Module:
@@ -5137,7 +5137,7 @@
       }
     },
 
-    validatePhoneNumber: function() {
+    validatePhoneNumber: function(int) {
       if (this[0].nodeName !== 'INPUT') return;
       var phone;
       var phoneNumber;
@@ -7054,6 +7054,7 @@
     })()
   });
 })();
+
 // Truck Engine - Driver for sessionStorage:
 (function() {
   'use strict';
@@ -7950,7 +7951,7 @@
 })();
 
 /*
-  Truck body parts. These modules are used by both Truck Engine and jQuery. They are a set of widgets for users to interact with.
+  Truck body parts. These modules are a set of widgets for user interaction with the UI and UI behavior.
 */
 
 // Truck Body - Adjust Navbar for iOS
@@ -8559,6 +8560,7 @@
     }
   });
 })();
+// Tank Body - Edit List
 (function() {
   'use strict';
   $.extend({
